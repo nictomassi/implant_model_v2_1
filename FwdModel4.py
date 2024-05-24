@@ -183,4 +183,4 @@ def fwd_model_4(mode):
 
 
 if __name__ == '__main__':
-    fwd_model_4('gui')
+    fwd_model_4('gui')  # alternatives are 'main', 'gui' and "survey'
