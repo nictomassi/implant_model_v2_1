@@ -32,6 +32,9 @@ def fwd_model_4(mode):
         NEURONS['act_stdrel'] = tempdata[1]
         NEURONS['thrtarg'] = tempdata[2]
         espace = tempdata[3]  # should be overridden by scenario/subject
+    elif mode == 'gui':
+        # read CSV file with position, survival espace
+        scenarios = ['gui_scenario']
     else:  # should not happen
         print('fwd_model called with unrecognized mode: ', mode)
         exit()
@@ -84,7 +87,19 @@ def fwd_model_4(mode):
             print('This scenario, ', scenario, ' appears to be for a subject, not a forward model scenario. Skipping.')
             continue
 
-        [survVals, electrodes['rpos'], espace] = s_scen.set_scenario(scenario, NELEC)
+        if mode == 'gui':
+            # read CSV file
+            param_file = 'guifile.csv'
+            if os.path.exists(param_file):
+                with open(param_file, newline='') as csvfile:
+                    datareader = csv.reader(csvfile, delimiter=',')
+                    survVals = np.array(next(datareader), dtype='float')
+                    electrodes['rpos'] = np.array(next(datareader), dtype=float) # Do the parsing
+                    espace = float(next(datareader)[0])
+
+        else:
+            [survVals, electrodes['rpos'], espace] = s_scen.set_scenario(scenario, NELEC)
+
         ELEC_MIDPOINT = GRID['z'][-1]/2.0 # electrode array midpoint
         ARRAY_BASE = -(np.arange(NELEC - 1, -1, -1) * espace)
         array_mid = (ARRAY_BASE[0] + ARRAY_BASE[-1])/2.0
@@ -149,6 +164,7 @@ def fwd_model_4(mode):
         spname = FWDOUTPUTDIR + 'simParams' + scenario
         with open(spname + '.pickle', 'wb') as f:
             pickle.dump(simParams, f, pickle.HIGHEST_PROTOCOL)
+        print('saved: ', spname + '.pickle')
         # Note that this is saving only the last simParams structure from the loops on sigma and in get_thresholds.
 
         # Plot the results, if desired
@@ -167,4 +183,4 @@ def fwd_model_4(mode):
 
 
 if __name__ == '__main__':
-    fwd_model_4('main')
+    fwd_model_4('gui')
