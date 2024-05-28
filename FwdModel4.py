@@ -34,7 +34,8 @@ def fwd_model_4(mode):
         espace = tempdata[3]  # should be overridden by scenario/subject
     elif mode == 'gui':
         # read CSV file with position, survival espace
-        scenarios = ['gui_scenario']
+        print('foo')
+        # scenarios = ['gui_scenario']
     else:  # should not happen
         print('fwd_model called with unrecognized mode: ', mode)
         exit()
@@ -77,8 +78,6 @@ def fwd_model_4(mode):
     #         tempval = str(rposScenarios[j])
     #         print('tempval = ', tempval)
     #         scenarios.append('Uniform'+str(survScenarios[i])+'R'+tempval.replace('.', ''))
-
-    # print(scenarios)
 
     for scenario in scenarios:
         # if this scenario is a subject, set use_forward_model to be false
@@ -183,4 +182,4 @@ def fwd_model_4(mode):
 
 
 if __name__ == '__main__':
-    fwd_model_4('gui')  # alternatives are 'main', 'gui' and "survey'
+    fwd_model_4('main')  # alternatives are 'main', 'gui' and "survey'

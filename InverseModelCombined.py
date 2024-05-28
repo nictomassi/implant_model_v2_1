@@ -223,27 +223,26 @@ def inverse_model_combined(mode):  # Start this script
     pr = cProfile.Profile()
     pr.enable()  # Start the profiler
 
-    # Now hold these data until about to fit a particular combination of monopolar and tripolar threshold values
-    # to see if there is more than one solution
-    surv_grid_vals = np.arange(0.04, 0.97, 0.02)
-    rpos_grid_vals = np.arange(-0.95, 0.96, 0.02)
-    act_vals = []
-    n_elec_pos = 0
-    n_z_pos = 0
-
     # Open field table and load data
     if "fieldTable" not in locals():
         with open(FIELDTABLE, 'rb') as combined_data:
             data = pickle.load(combined_data)
             combined_data.close()
-
-            #  load(FIELDTABLE) # get model voltage/activating tables, if not already loaded
             # (output is 'fieldTable' and 'fieldParams')
             fp = data[0]
             # Temp fixup
             fp['zEval'] = np.array(fp['zEval'])
             act_vals = data[2]  # the data[1] has voltage values, which we are ignoring here
             simParams['grid']['table'] = act_vals
+
+    # Now hold these data until about to fit a particular combination of monopolar and tripolar threshold values
+    # to see if there is more than one solution
+
+    surv_grid_vals = np.arange(0.04, 0.97, 0.02)  # TODO should read these from the file, not have the range hard coded here
+    rpos_grid_vals = np.arange(-0.95, 0.96, 0.02)
+
+    n_elec_pos = 0
+    n_z_pos = 0
 
     num_scen = len(scenarios)
     # Set up array for summary values
@@ -314,33 +313,27 @@ def inverse_model_combined(mode):  # Start this script
                 # Do the parsing
                 tripol_thr[i, :] = row
 
-        electrodes['rpos'] = np.zeros(NELEC)
         ELEC_MIDPOINT = GRID['z'][-1] / 2.0  # electrode array midpoint
         ARRAY_BASE = -(np.arange(NELEC - 1, -1, -1) * espace)
         array_mid = (ARRAY_BASE[0] + ARRAY_BASE[-1]) / 2.0
         electrodes['zpos'] = (ELEC_MIDPOINT - array_mid) + ARRAY_BASE
 
         if use_fwd_model:
-            # [survvals, rposvals, espace] = s_scen.set_scenario(scenario, NELEC)
             csv_file = FWDOUTPUTDIR + 'FwdModelOutput_' + scenario + '.csv'
             [thr_data, ct_data] = lcsv.load_fwd_csv_data(csv_file)
             subject = []
 
-            # TODO this is for testing purposes only
             # thr_data['thrtp_db'] = np.insert(thr_data['thrtp_db'], 0, np.NaN)  # put NaNs at ends of array
             # thr_data['thrtp_db'] = np.append(thr_data['thrtp_db'], np.NaN)
             thr_data['thrmp_db'] = np.array(thr_data['thrmp_db'])
             thr_data['thrtp_db'] = np.array(thr_data['thrtp_db'])
 
+            # TODO this is for testing purposes only
             # thr_data['thrmp_db'] -= 5.0
             # thr_data['thrtp_db'] -= 5.0
 
         else:  # use threshold data from a subject
-
-
             rposvals = electrodes['rpos']
-            # thr_data = {'thrmp_db': (subject_data.subj_thr_data(subject))[0], 'thrmp': [],
-            #             'thrtp_db': (subject_data.subj_thr_data(subject))[1], 'thrtp': [], 'thrtp_sigma': 0.9}
             thr_data['thrtp_db'] = np.insert(thr_data['thrtp_db'], 0, np.NaN)  # put NaNs at ends of array
             thr_data['thrtp_db'] = np.append(thr_data['thrtp_db'], np.NaN)
 
@@ -353,9 +346,9 @@ def inverse_model_combined(mode):  # Start this script
             # overall_offset_db = 0
             # Use the mean of monopolar and tripolar offsets
             overall_offset_db = np.mean([mp_offset_db, tp_offset_db])
-            offset_mult = 1.0
-            thr_data['thrmp_db'] -= offset_mult * overall_offset_db
-            thr_data['thrtp_db'] -= offset_mult * overall_offset_db
+            # offset_mult = 1.0
+            thr_data['thrmp_db'] -= overall_offset_db
+            thr_data['thrtp_db'] -= overall_offset_db
 
         thresh_summary_full[scen, 0, 0, :] = thr_data['thrmp_db']
         thresh_summary_full[scen, 0, 1, :] = thr_data['thrtp_db']
@@ -366,7 +359,7 @@ def inverse_model_combined(mode):  # Start this script
         radius = 1.0
         ct_data['stdiameter'] = radius * 2.0 * (np.zeros(NELEC) + 1.0)
 
-        #  rposvals = electrodes['rpos']  # save this for later
+        rposvals = electrodes['rpos']  # save this for later  # TODO possibly not needed here
         saverposvals = rposvals
 
         cochlea_radius = ct_data['stdiameter'] / 2.0
@@ -395,8 +388,6 @@ def inverse_model_combined(mode):  # Start this script
         par = Parameters()
         par._asteval.symtable['max_diff_adjacent'] = max_diff_adjacent
         initvec = []
-
-        print('line 428: espace = ', espace)
 
         if fit_mode == 'combined':  # Optimize survival and rpos to match MP and TP thresholds
             # Loop on electrodes, fitting rpos and survival fraction at each location
@@ -449,9 +440,6 @@ def inverse_model_combined(mode):  # Start this script
                         print('max thr in 2D: ', np.max(mono_thr[2:, :]), ' and ', np.max(tripol_thr[2:, :]))
                         print(' and goals are: ', mptarg, ' and ', tptarg)
                         # exit()
-
-                    # Maybe there's some error in this process.
-                    # plt.show()
 
                     mp_idx, tp_idx = find_closest(mpx, mpy, tpx, tpy)
 
@@ -517,6 +505,9 @@ def inverse_model_combined(mode):  # Start this script
 
                     ax_guess = plt.plot(rp_guess, sv_guess, 'x')
 
+                if ifPlotGuessContours:
+                    plt.show()
+
                 fitrposvals[i] = rp_guess
                 fitsurvvals[i] = sv_guess
 
@@ -533,18 +524,16 @@ def inverse_model_combined(mode):  # Start this script
 
             for i, val in enumerate(initvec):  # place values in to the par object
                 if i < NELEC:
-                    lb = -0.85  # lower and upper bounds
-                    ub = 0.85
+                    lb = -0.95  # lower and upper bounds for position
+                    ub = 0.95
                 elif NELEC <= i < 2 * NELEC:
-                    lb = 0.1
-                    ub = 0.9
-                else:
+                    lb = 0.0  # density
+                    ub = 1.0
+                else:  ## TODO leftover from tryng to fit external resistivity. Can remove
                     lb = 125
                     ub = 2500
 
                 par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
-
-            start_pos = fitsurvvals  # prior to fitting
 
             # end block for single electrode fits during the combined fit
 
@@ -558,7 +547,6 @@ def inverse_model_combined(mode):  # Start this script
                 else:
                     par.add('v_%i' % i, value=initvec[i], vary=False)
 
-            #  start_pos = initvec[NELEC:]
         elif fit_mode == 'survival':
             initvec = np.append(rposvals, (np.ones(NELEC) * 0.5))
             for i, val in enumerate(initvec):
@@ -570,12 +558,8 @@ def inverse_model_combined(mode):  # Start this script
                     ub = 0.9
                 par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
 
-            start_pos = initvec[NELEC:]
-
         # Contraint on maximum change of electrode posiiton for adjacent electrodes
         #         par.add('max_adj', expr=max_diff_adjacent(x, par), max=0.5)
-
-        print('line 607. espace = ', espace)
 
         if use_minimizer:  # Now do the main fitting for all electrodes at once
             # minner = Minimizer(objectivefunc_lmfit_all, par, diff_step=0.02, nan_policy='omit',

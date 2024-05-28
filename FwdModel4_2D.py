@@ -21,13 +21,13 @@ import csv
 import matplotlib.pyplot as plt
 import pickle
 from common_params import *
-import fig_2D_contour
-import plot_neuron_activation
+import figs4_5_2D_contour
+import fig3_neuron_activation
 
 
 def fwd_model_2D(mode):
 
-    # loop on espace values
+    # TODO:  should loop on espace values
     if mode == 'main':
         # espace = 0.85
         espace = 1.1
@@ -70,16 +70,18 @@ def fwd_model_2D(mode):
     COCHLEA['res1'] = fp['resInt'] * np.ones(NELEC)  # Note these valus do not match thos of Goldwyn et al., 2010
     COCHLEA['res2'] = fp['resExt'] * np.ones(NELEC)  # resistivities are in Ohm*cm (conversion to Ohm*mm occurs later)
     GRID['r'] = fp['rspace']  # only 1 of the 3 cylindrical dimensions can be a vector (for CYLINDER3D_MAKEPROFILE)
-    coef = 0  # convex: -1 | 0.4, 0.9 ; linear: 0 | 1; concave: +1 | 1.0, 1.8
-    POW = 1
 
-    SIDELOBE = 1
+    # The lines below are not used, but represent infrastructure for nonlinear loudness growth curves or
+    # ecap amplitude growth
+    # coef = 0  # convex: -1 | 0.4, 0.9 ; linear: 0 | 1; concave: +1 | 1.0, 1.8
+    # POW = 1
+    # SIDELOBE = 1
     ################################
 
     ifPlot = False  # Whether to plot the results
     ifPlotContours = False
-    survVals = np.arange(0.04, 0.97, 0.02)  # Was 0.02
-    rposVals = np.arange(-0.95, 0.96, 0.02)  # Was 0.02
+    survVals = np.arange(0.04, 0.97, 0.02)
+    rposVals = np.arange(-0.95, 0.96, 0.02)
     hires = '_hi_res'
     nSurv = len(survVals)
     nRpos = len(rposVals)
@@ -91,7 +93,15 @@ def fwd_model_2D(mode):
     if not os.path.isdir(FWDOUTPUTDIR):
         os.mkdir(FWDOUTPUTDIR)
 
-    OUTFILE = FWDOUTPUTDIR + 'FwdModelOutput_' + descrip + '.csv'
+    if espace == 0.85:
+        e_txt = '085'
+    elif espace == 1.1:
+        e_txt = '110'
+    else:
+        e_txt = 'xxx'
+    es_text = '_espace_' + e_txt
+
+    OUTFILE = FWDOUTPUTDIR + 'FwdModelOutput_' + descrip + es_text + '.csv'
 
     # Additional setup
     COCHLEA['timestamp'] = datetime.datetime.now()
@@ -129,7 +139,7 @@ def fwd_model_2D(mode):
     thr_sim_db[:] = np.nan
     neuronact = np.empty((nSurv, nRpos, nSig, 1, len(GRID['z'])))  # Only 1 electrode in this model
     neuronact[:] = np.nan
-    n_sols = np.zeros((nSurv, nRpos), dtype=int)
+    # n_sols = np.zeros((nSurv, nRpos), dtype=int)
 
     # Get survival values for all 330 clusters from the 16 values at electrode positions.
     simParams['neurons']['rlvl'] = rlvltable
@@ -156,7 +166,7 @@ def fwd_model_2D(mode):
                 if np.max(nexttemp2) == 0:
                     print("flat activation")
                 neuronact[j, k, i, :, :] = nexttemp2
-                neuroncount = np.sum(neuronact[j, k, i, :, :])
+                # neuroncount = np.sum(neuronact[j, k, i, :, :])  ## commented out because unused 24 May 2024
 
     # Write results to a CSV file
     header1 = ['Monopolar thresholds', 'rpos values in columns']
@@ -179,18 +189,14 @@ def fwd_model_2D(mode):
 
     data_file.close()
 
-    if espace == 0.85:
-        e_txt = '085'
-    elif espace == 1.1:
-        e_txt = '110'
-    else:
-        e_txt = 'xxx'
-    es_text = '_espace_' + e_txt
-
     np.savetxt(FWDOUTPUTDIR + 'Monopolar_2D_' + STD_TEXT + es_text + '.csv', thr_sim_db[:, :, 0], delimiter=',')
     np.savetxt(FWDOUTPUTDIR + 'Tripolar_09_2D_' + STD_TEXT + es_text + '.csv', thr_sim_db[:, :, 1], delimiter=',')
 
-    np.save(FWDOUTPUTDIR + 'simParams' + descrip, simParams)
+    spname = FWDOUTPUTDIR + 'simParams' + descrip + es_text + '.pickle'
+    with open(spname, 'wb') as f:
+        pickle.dump(simParams, f, pickle.HIGHEST_PROTOCOL)
+        f.close()
+    print('saved: ', spname)
     # Note that this is saving only the last simParams structure from the loops on sigma and in getThresholds.
 
     # display min and max threshold values
@@ -206,8 +212,8 @@ def fwd_model_2D(mode):
 
     # Plot the results
     if ifPlot:
-        fig_2D_contour.fig_2D_contour()
-        plot_neuron_activation.plot_neuron_activation()
+        figs4_5_2D_contour.fig_2D_contour()
+        fig3_neuron_activation.fig3_neuron_activation()
         plt.show()
 
 

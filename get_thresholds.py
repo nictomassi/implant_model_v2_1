@@ -39,10 +39,10 @@ def get_thresholds(field_table, field_params, sim_params):
         elec_vals = range(7, 8)  # use electrode 7 to be in middle of cochlear length
         # set the position manually in the center of the array
         espace = sim_params['electrodes']['zpos'][elec_vals[0]] - sim_params['electrodes']['zpos'][elec_vals[0] - 1]
-        # neuron_midpoint = np.max(sim_params['grid']['z'])/2.0
+        neuron_midpoint = np.max(sim_params['grid']['z'])/2.0
         elec_start = sim_params['electrodes']['zpos'][0]
         elec_end = sim_params['electrodes']['zpos'][-1]
-        elec_pos = 16.5  # fixed position
+        elec_pos = neuron_midpoint  # fixed position in center of neuron array
         # elec_pos = (elec_start + elec_end)/2.0
         sim_params['electrodes']['zpos'][elec_vals[0]] = elec_pos
         sim_params['electrodes']['zpos'][elec_vals[0]-1] = elec_pos - espace

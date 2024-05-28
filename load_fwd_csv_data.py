@@ -17,7 +17,6 @@ def load_fwd_csv_data(loadfile):
     thr_data = {'thrmp_db': [], 'thrmp': [], 'thrtp_db': [], 'thrtp': [], 'thrtp_sigma': 0.9}
     ct_data = {'stdiameter': [], 'scala': [], 'elecdist': [], 'espace': 1.1, 'type': [], 'insrt_base': [],
                'insert_apex': []}
-    ## TODO -- allow scenarios to have different electrode spacing
 
     radius = 1.0
 

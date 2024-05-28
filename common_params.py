@@ -7,7 +7,7 @@ NELEC = 16
 # ELEC_BASALPOS = 26.25  # in mm ** removed this 20 May 2024 to make sure electrode array is centered in neurons
 
 # Neural activation parameters
-R_EXT = 250.0
+R_EXT = 70.0   # ohm-cm
 R_TEXT = 'R' + str(round(R_EXT))
 THRTARG = 100.0
 TARG_TEXT = '_TARG' + str(round(THRTARG)) + '/'
@@ -22,8 +22,6 @@ sigmaVals = [0, 0.9]  # Always explore monopolar stimulation and one value of si
 # can be overridden for individual subjects
 
 COCHLEA = {'source': 'manual', 'timestamp': [], 'radius': []}
-# electrodes = {'source': 'manual', 'timestamp': [], 'zpos': ELEC_BASALPOS - (np.arange(NELEC - 1, -1, -1) * espace),
-#               'rpos': []}
 electrodes = {'source': 'manual', 'timestamp': [], 'zpos': [], 'rpos': []}
 NEURONS = {'act_ctr': ACTR, 'act_stdrel': ACT_STDREL, 'nsurvival': [], 'sidelobe': 1.0, 'neur_per_clust': 10,
            'rlvl': [], 'rule': 'proportional', 'coef': 0.0, 'power': 1.0, 'thrtarg': THRTARG}
@@ -36,7 +34,7 @@ simParams = {'cochlea': COCHLEA, 'electrodes': electrodes, 'channel': CHANNEL, '
              'run_info': RUN_INFO}
 
 nZ = len(GRID['z'])
-NSURVINIT = 1.0
+# NSURVINIT = 1.0  # not used. Commented out 24 May 2024
 
 ct_uncertainty = 0.1  # uncertainty for CT values in case one wants to display it on graphs
 
@@ -79,11 +77,12 @@ ct_uncertainty = 0.1  # uncertainty for CT values in case one wants to display i
 # scenarios = ['S22']  # paper "good fit" examples. Figure 7
 # scenarios = ['S29', 'S56']  # paper "poor fit" examples. Figure 8
 # scenarios = ['A002R', 'A005L', 'A014L', 'A022L', 'A022R', 'A023R', 'A024L']
-# scenarios = ['S40', 'S43']
+# scenarios = ['S43']
 # all subjects with CT data
 # scenarios = ['RampRposSGradual80', 'S22']
 # scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80']
 # scenarios = ['RampRposSGradual80']
+global scenarios
 scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S22', 'S27', 'S29', 'S38', 'S40', 'S41', 'S42',
              'S43', 'S46', 'S47', 'S49R', 'S50', 'S52', 'S53', 'S54', 'S55', 'S56', 'S57']
 # scenarios = ['A014L']
@@ -112,24 +111,3 @@ elif R_TEXT == 'R125O':
 elif R_TEXT == 'R2500':
     FIELDTABLE = '7Dec2023_MedResolution_Rext2500_nonans.dat'
 
-
-# For future update with Python 3.10
-# match R_TEXT:
-#     case 'R70':
-#         FIELDTABLE = '6Dec2023_MedResolution_Rext70_nonans.dat'
-#     case 'R125':
-#         FIELDTABLE = '20Jan2024_MedResolution_Rext125_nonans.dat'
-#     case 'R250':
-#         FIELDTABLE = '13August2023_MedResolution_Rext250_nonans.dat'
-#     case 'R375':
-#         FIELDTABLE = '18Mar2024_MedResolution_Rext375.dat'
-#     case 'R500':
-#         FIELDTABLE = '19Dec2023_MedResolution_Rext500.dat'
-#     case 'R750':
-#         FIELDTABLE = '18Jan2024_MedResolution_Rext750_nonans.dat'
-#     case 'R1000':
-#         FIELDTABLE = '18Jan2024_MedResolution_Rext1000_nonans.dat'
-#     case 'R1250':
-#         FIELDTABLE = '28Dec2023_MedResolution_Rext1250.dat'
-#     case 'R2500':
-#         FIELDTABLE = '7Dec2023_MedResolution_Rext2500_nonans.dat'

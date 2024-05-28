@@ -7,11 +7,8 @@ from matplotlib.font_manager import findfont, FontProperties
 import matplotlib as mpl
 
 
-def fig_neuron_activation():
+def fig3_neuron_activation():
 
-    # Note: to make this figure, you need to have run the forward model with these scenarios first
-    # TODO need next line?
-    # TODO scenarios = ['Uniform80R05', 'Uniform80R10', 'Uniform80R15']
     mpl.rcParams['font.family'] = 'Arial'
 
     espace = 0.85
@@ -37,14 +34,14 @@ def fig_neuron_activation():
               str(np.min(rpos_vals)) + "_" + str(np.max(rpos_vals)) + hires
 
 
-    # params_file = FWDOUTPUTDIR + 'simParamssurv_0.04_0.9599999999999999_rpos_-0.95_0.9500000000000017_hi_res.npy'
-    params_file = FWDOUTPUTDIR + 'simParams' + descrip
-    sp = np.load(params_file + '.npy', allow_pickle=True)
-    # with open(params_file, 'rb') as f:
-    #     sp = pickle.load(f)
+    params_file = FWDOUTPUTDIR + 'simParams' + descrip + '.pickle'
+    # sp = np.load(params_file + '.npy', allow_pickle=True)
+    with open(params_file, 'rb') as f:
+        sp = pickle.load(f)
+        f.close()
 
-    elec_2d = 7  # which electrode was used in the 2D forward model
-    posvals = np.arange(0, 33, 0.01) - 14.6 - (elec_2d * espace)
+    posvals = np.arange(0, 33, 0.01)
+    posvals -= posvals[-1]/2.0
 
     # Load monopolar data
     datafile = FWDOUTPUTDIR + "Monopolar_2D_" + STD_TEXT + es_text + ".csv"
@@ -106,9 +103,9 @@ def fig_neuron_activation():
         #     ax.set_title(titletext)
 
         n_p_c = sp['neurons']['neur_per_clust']
-        ax.plot(posvals + espace, neuronact[survidxs[col], rposidxs[row], 0, 0, :]/n_p_c, '.',
+        ax.plot(posvals, neuronact[survidxs[col], rposidxs[row], 0, 0, :]/n_p_c, '.',
                 color='blue', linewidth=0.5)
-        ax.plot(posvals + espace, neuronact[survidxs[col], rposidxs[row], 1, 0, :]/n_p_c, '.',
+        ax.plot(posvals, neuronact[survidxs[col], rposidxs[row], 1, 0, :]/n_p_c, '.',
                 color='red', linewidth=0.5)
         ax.set(xlabel='Longitudinal distance (mm)')
         if row == 1 and col == 0:
@@ -116,21 +113,20 @@ def fig_neuron_activation():
         # place threshold values here
         xlimit = [-4, 4]
         ax.set_xlim((xlimit[0], xlimit[1]))
-        ax.set_yticks([0, 0.1, 0.2, 0.3])
+        ax.set_yticks([0, 0.05, 0.1])
         ax.spines.right.set_visible(False)
         ax.spines.top.set_visible(False)
         ax.label_outer()
         if col == (nsurv - 1):
             mytext = 'Distance = ' + str(1 - plt_rpos_vals[row]) + ' mm'
-            ax.text(4.0, 0.3, mytext, horizontalalignment='right')
+            ax.text(4.0, 0.08, mytext, horizontalalignment='right')
             m_thr_text = "Monopolar thr.: %.2f dB" % mono_thr[survidxs[col], rposidxs[row]]
             t_thr_text = "Tripoloar thr.: %.2f dB" % tripol_thr[survidxs[col], rposidxs[row]]
-            ax.text(4.0, 0.25, m_thr_text, horizontalalignment='right')
-            ax.text(4.0, 0.2, t_thr_text, horizontalalignment = 'right')
+            ax.text(4.0, 0.07, m_thr_text, horizontalalignment='right')
+            ax.text(4.0, 0.06, t_thr_text, horizontalalignment = 'right')
 
             print('surv ', titletext, ' dist ', str(1 - plt_rpos_vals[row]), ' Thr: ', mono_thr[survidxs[col],
                         rposidxs[row]], ' and ', tripol_thr[survidxs[col], rposidxs[row]])
-    # plt.show()
 
     # Save figure
     fig_filename = 'fig3_neuronact.pdf'
@@ -143,4 +139,4 @@ def fig_neuron_activation():
 
 if __name__ == '__main__':
 
-    fig_neuron_activation()
+    fig3_neuron_activation()

@@ -13,7 +13,7 @@ import scipy.stats as stats
 import pandas as pd
 
 
-def read_inv_summary(res):
+def read_inv_summary(res, na_scen):
     # Reads a summary file, and tests whether average rpos error is less than chance based on shuffling
     # You need to run the inverse model for all subjects before making this figure
 
@@ -24,8 +24,8 @@ def read_inv_summary(res):
 
     summary_file_name = INVOUTPUTDIR + 'summary_inverse_fit_results.npy'
     [scenarios, thresh_summ_all, rpos_summary] = np.load(summary_file_name, allow_pickle=True)
-    print(scenarios[0])
-    print(rpos_summary[0][:])
+    if na_scen > 0:
+        scenarios = scenarios[na_scen:]  # Trim off the artificial scenarios, leaving just the subjects
     nscen = len(scenarios)
     n_elec = NELEC
     rpos_vals = np.zeros((nscen, n_elec))
@@ -45,22 +45,28 @@ def read_inv_summary(res):
     with open(summary_csv_file_name, mode='r') as data_file:
         entire_file = csv.reader(data_file, delimiter=',', quotechar='"')
         for row, row_data in enumerate(entire_file):
-            if row == 0:  # skip header row
+            if row < 4:  # skip header row and three scenarios
                 pass
             else:
-                [_, thresh_err_summary[row-1, 0], thresh_err_summary[row-1, 1],
-                 rpos_err_summary[row-1], aaa_temp, dist_corr[row-1], dist_corr_p[row-1]] = row_data
+                if row < 22:
+                    [_, thresh_err_summary[row-na_scen - 1, 0], thresh_err_summary[row-na_scen -1, 1],
+                     rpos_err_summary[row-na_scen - 1], aaa_temp, dist_corr[row-na_scen - 1],
+                     dist_corr_p[row-na_scen - 1]] = row_data
+                else:
+                    pass
                 # Note aaa_temp is a placeholder for the density error, which is not used
 
         data_file.close()
 
-    return [np.asarray(thresh_summ_all[0]), thresh_err_summary, rpos_fit_vals, rpos_vals, rpos_err_summary, aaa_temp, dist_corr, dist_corr_p]
+    return [np.asarray(thresh_summ_all[0]), thresh_err_summary, rpos_fit_vals, rpos_vals, rpos_err_summary, aaa_temp,
+            dist_corr, dist_corr_p]
 
 def fig9_summary():
     # Constants
     label_ypos = 1.05
     n_subj = 18
     nscen = len(scenarios)
+    n_artscen = nscen-n_subj # artificial scenarios
     n_elec = 16
     mpl.rcParams['font.family'] = 'Arial'
 
@@ -101,19 +107,19 @@ def fig9_summary():
     plt.figtext(0.49, 0.33, 'F', color='black', size=20, weight='bold')
 
     # get data
-    thr_sum_all_0, thresh_err_summary_0, rpos_fit_vals_0, rpos_vals_0, rpos_err_summary_0, aaa_temp, dist_corr_0, dist_corr_p_0 =(
-        read_inv_summary(r_vals[0]))
-    thr_sum_all_1, thresh_err_summary_1, rpos_fit_vals_1, rpos_vals_1, rpos_err_summary_1, aaa_temp, dist_corr_1, dist_corr_p_1 =(
-        read_inv_summary(r_vals[1]))
+    (thr_sum_all_0, thresh_err_summary_0, rpos_fit_vals_0, rpos_vals_0, rpos_err_summary_0, aaa_temp, dist_corr_0,
+     dist_corr_p_0) = read_inv_summary(r_vals[0], n_artscen)
+    (thr_sum_all_1, thresh_err_summary_1, rpos_fit_vals_1, rpos_vals_1, rpos_err_summary_1, aaa_temp, dist_corr_1,
+     dist_corr_p_1) = read_inv_summary(r_vals[1], n_artscen)
 
     thresh_err_summary = np.zeros((2, len(scenarios), 2))
-    thresh_err_summary[0, :, :] = thresh_err_summary_0
-    thresh_err_summary[1, :, :] = thresh_err_summary_1
+    thresh_err_summary[0, 3:, :] = thresh_err_summary_0
+    thresh_err_summary[1, 3:, :] = thresh_err_summary_1
     #print('rposvals: ', rpos_vals[0], rpos_vals[1])
     rposerrs = np.zeros((2, nscen, nscen, n_elec))
 
-    color = iter(cm.rainbow(np.linspace(0, 1, n_subj)))
-    for idx, scen in enumerate(scenarios):  # Panel A
+    # color = iter(cm.rainbow(np.linspace(0, 1, n_subj)))
+    for idx, scen in enumerate(scenarios[n_artscen:]):  # Panel A
         x = np.asarray(thr_sum_all_0[idx, 0, 0, :])
         y = np.asarray(thr_sum_all_0[idx, 1, 0, :])
         axs1[0, 0].plot(x, y, '.', color=fig9_colors[idx, :])
@@ -121,10 +127,10 @@ def fig9_summary():
         axs1[0, 0].set_ylabel('Fit monopolar threshold (dB)')
         axs1[0, 0].spines['top'].set_visible(False)
         axs1[0, 0].spines['right'].set_visible(False)
-        axs1[0, 0].set_xlim([70, 90])
-        axs1[0, 0].set_ylim([70, 90])
+        axs1[0, 0].set_xlim([30, 70])
+        axs1[0, 0].set_ylim([30, 70])
 
-    for idx, scen in enumerate(scenarios):  # Panel C
+    for idx, scen in enumerate(scenarios[n_artscen:]):  # Panel C
         x = np.asarray(thr_sum_all_0[idx, 0, 1, :])
         y = np.asarray(thr_sum_all_0[idx, 1, 1, :])
         axs1[1, 0].plot(x, y, '.', color=fig9_colors[idx, :])
@@ -133,7 +139,7 @@ def fig9_summary():
         axs1[1, 0].spines['top'].set_visible(False)
         axs1[1, 0].spines['right'].set_visible(False)
 
-    for idx, scen in enumerate(scenarios):  # Panel B
+    for idx, scen in enumerate(scenarios[n_artscen:]):  # Panel B
         x = np.asarray(thr_sum_all_1[idx, 0, 0, :])
         y = np.asarray(thr_sum_all_1[idx, 1, 0, :])
         axs1[0, 1].plot(x, y, '.', color=fig9_colors[idx, :])
@@ -141,10 +147,10 @@ def fig9_summary():
         axs1[0, 1].set_ylabel('Fit monopolar threshold (dB)')
         axs1[0, 1].spines['top'].set_visible(False)
         axs1[0, 1].spines['right'].set_visible(False)
-        axs1[0, 1].set_xlim([55, 80])
-        axs1[0, 1].set_ylim([55, 80])
+        axs1[0, 1].set_xlim([30, 70])
+        axs1[0, 1].set_ylim([30, 70])
 
-    for idx, scen in enumerate(scenarios):  # Panel D
+    for idx, scen in enumerate(scenarios[n_artscen:]):  # Panel D
         x = np.asarray(thr_sum_all_1[idx, 0, 1, :])
         y = np.asarray(thr_sum_all_1[idx, 1, 1, :])
         axs1[1, 1].plot(x, y, '.', color=fig9_colors[idx, :])
@@ -154,8 +160,7 @@ def fig9_summary():
         axs1[1, 1].spines['right'].set_visible(False)
 
     # Now distance data
-    print('rposfit for S22: ', rpos_fit_vals_0[0])
-    for idx, scen in enumerate(scenarios):  # Panel E
+    for idx, scen in enumerate(scenarios[n_artscen:]):  # Panel E
         ct_dist = 1 - rpos_vals_0[idx]
         fit_dist = 1 - rpos_fit_vals_0[idx]
         retval = subject_data.subj_thr_data(scen)
@@ -173,7 +178,7 @@ def fig9_summary():
             axs1[2, 0].plot((minx, maxx), (minx*slope + intercept, maxx*slope + intercept), '-', c=fig9_colors[idx, :])  # plot line
 
 
-    for idx, scen in enumerate(scenarios):  # Panel F
+    for idx, scen in enumerate(scenarios[n_artscen:]):  # Panel F
         ct_dist = 1 - rpos_vals_1[idx]
         fit_dist = 1 - rpos_fit_vals_1[idx]
         retval = subject_data.subj_thr_data(scen)

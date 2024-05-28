@@ -76,13 +76,13 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised):
 
     title_text = 'Fit survival values'
     if use_fwd_model:
-        axs[2].plot(xvals[1:l_e], fitsurvvals[1:l_e], marker='o', color='red', label='fit')
-        axs[2].plot(xvals[1:l_e], survvals[1:l_e], marker='o', color='green', label='desired')
+        axs[2].plot(xvals, fitsurvvals, marker='o', color='red', label='fit')
+        axs[2].plot(xvals, survvals, marker='o', color='green', label='desired')
         if plot_guess:
             axs[2].plot(xvals, initvec[NELEC:], marker='o', color='purple', label='initial guess')
 
     else:
-        axs[2].plot(xvals[1:l_e], fitsurvvals[1:l_e], marker='o', color='black', label='modeled')
+        axs[2].plot(xvals, fitsurvvals, marker='o', color='black', label='modeled')
 
     axs[2].set(xlabel='Electrode number', ylabel='Fractional neuronal density', title=title_text)
     axs[2].set_xlim(0, 17)
@@ -95,8 +95,6 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised):
     if save_fig:
         save_file_name = INVOUTPUTDIR + this_case + '_fitResultsFig_' + 'combined.png'
         fig_consol.savefig(save_file_name)
-        save_file_name = INVOUTPUTDIR + this_case + '_fitResultsFig_' + 'combined.eps'
-        fig_consol.savefig(save_file_name, format='eps')
 
     # test correlation figure
     if not use_fwd_model:
@@ -115,15 +113,19 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised):
 
     # second plot, scatter of electrode position and neuronal survival
     fig3, axs3 = plt.subplots(1, 1)
-    axs3.plot(1- fitrposvals, fitsurvvals, 'o', color='green')
+    axs3.plot(1 - fitrposvals, fitsurvvals, 'o', color='green')
     axs3.set_xlabel('fit distance (mm)')
     axs3.set_ylabel('fit density')
     axs3.set_xlim([0, 2])
     axs3.set_ylim([0, 1])
     # now plot initial guesses
     axs3.plot(1 - initvec[0:NELEC], initvec[NELEC:], 'o', color='red')
+    for i in range(NELEC):
+        axs3.plot([1 - fitrposvals[i], 1 - initvec[i]], [fitsurvvals[i], initvec[NELEC + i]], color='black')
     title_text = this_case + '  Mean position error (mm): ' + '%.2f' % rpos_err_metric
     fig3.suptitle(title_text, fontsize=14)
+    axs3.text(1.75, 0.95, 'guess', color='red')
+    axs3.text(1.75, 0.9, 'fit', color='green')
     save_file_name = INVOUTPUTDIR + this_case + '_fitResults_scatter.png'
     fig3.savefig(save_file_name, format='png')
     if not unsupervised:
@@ -132,7 +134,8 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised):
 if __name__ == '__main__':
     use_fwd_model = False
     # case = scenarios[0]
-    case = 'S56'
+    case = 'S43'
+    espace = 0.85
     # case = 'RampRposSGradual80'
     # case = 'Gradual80R00'
 
