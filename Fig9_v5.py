@@ -12,17 +12,27 @@ import subject_data
 import scipy.stats as stats
 import pandas as pd
 
+def is_scenario(scen):  # test whether this is a scenario or subject
+    # if this scenario is a subject, set use_forward_model to be false
+    if (scen[0] == 'A' or scen[0] == 'S') and scen[1:3].isnumeric():
+        return False  # it's a subject
+    else:
+        return True
 
 def read_inv_summary(res, na_scen):
     # Reads a summary file, and tests whether average rpos error is less than chance based on shuffling
     # You need to run the inverse model for all subjects before making this figure
 
     # construct correct path for this resistivity
-    R_TEXT = 'R' + str(round(res))
-    INV_OUT_PRFIX = 'INV_OUTPUT/'
-    INVOUTPUTDIR = INV_OUT_PRFIX + R_TEXT + ACTR_TEXT + STD_TEXT + TARG_TEXT
+
+    # INV_OUT_PRFIX = 'INV_OUTPUT/'
+    # R_TEXT = 'R' + str(round(res))
+    # INVOUTPUTDIR = INV_OUT_PRFIX + R_TEXT + ACTR_TEXT + STD_TEXT + TARG_TEXT
+    new_dir_suffix = 'R%d' % res + '_' + 'std_%.1f' % ACT_STDREL + '_thr_%d' % THRTARG + '/'
+    INVOUTPUTDIR = INV_OUT_PRFIX + new_dir_suffix
 
     summary_file_name = INVOUTPUTDIR + 'summary_inverse_fit_results.npy'
+    print(summary_file_name)
     [scenarios, thresh_summ_all, rpos_summary] = np.load(summary_file_name, allow_pickle=True)
     if na_scen > 0:
         scenarios = scenarios[na_scen:]  # Trim off the artificial scenarios, leaving just the subjects
@@ -37,8 +47,8 @@ def read_inv_summary(res, na_scen):
     dist_corr_p = np.zeros(nscen)
 
     for i, scen in enumerate(scenarios):
-        rpos_fit_vals[i, :] = rpos_summary[i][0]
-        rpos_vals[i, :] = rpos_summary[i][1]
+        rpos_fit_vals[i, 1:-1] = rpos_summary[i+3][0]
+        rpos_vals[i, 1:-1] = rpos_summary[i+3][1]
 
     # get detailed data from the CSV summary file
     summary_csv_file_name = INVOUTPUTDIR + 'summary_inverse_fit_results.csv'
@@ -58,7 +68,11 @@ def read_inv_summary(res, na_scen):
 
         data_file.close()
 
-    return [np.asarray(thresh_summ_all[0]), thresh_err_summary, rpos_fit_vals, rpos_vals, rpos_err_summary, aaa_temp,
+    if not tp_extend:
+        return [np.asarray(thresh_summ_all[0]), thresh_err_summary, rpos_fit_vals[:, 1:-1], rpos_vals[:, 1:-1], rpos_err_summary,
+                aaa_temp, dist_corr, dist_corr_p]
+    else:
+        return [np.asarray(thresh_summ_all[0]), thresh_err_summary, rpos_fit_vals, rpos_vals, rpos_err_summary, aaa_temp,
             dist_corr, dist_corr_p]
 
 def fig9_summary():
@@ -66,7 +80,7 @@ def fig9_summary():
     label_ypos = 1.05
     n_subj = 18
     nscen = len(scenarios)
-    n_artscen = nscen-n_subj # artificial scenarios
+    n_artscen = nscen-n_subj # number of artificial scenarios, which should not be plotted here
     n_elec = 16
     mpl.rcParams['font.family'] = 'Arial'
 
@@ -105,8 +119,9 @@ def fig9_summary():
     plt.figtext(0.49, 0.63, 'D', color='black', size=20, weight='bold')
     plt.figtext(0.02, 0.33, 'E', color='black', size=20, weight='bold')
     plt.figtext(0.49, 0.33, 'F', color='black', size=20, weight='bold')
+    plt.figtext(0.255, 0.92, 'R' + str(round(r_vals[0])), color='black', size=16)
+    plt.figtext(0.755, 0.92, 'R' + str(round(r_vals[1])), color='black', size=16)
 
-    # get data
     (thr_sum_all_0, thresh_err_summary_0, rpos_fit_vals_0, rpos_vals_0, rpos_err_summary_0, aaa_temp, dist_corr_0,
      dist_corr_p_0) = read_inv_summary(r_vals[0], n_artscen)
     (thr_sum_all_1, thresh_err_summary_1, rpos_fit_vals_1, rpos_vals_1, rpos_err_summary_1, aaa_temp, dist_corr_1,
@@ -120,8 +135,8 @@ def fig9_summary():
 
     # color = iter(cm.rainbow(np.linspace(0, 1, n_subj)))
     for idx, scen in enumerate(scenarios[n_artscen:]):  # Panel A
-        x = np.asarray(thr_sum_all_0[idx, 0, 0, :])
-        y = np.asarray(thr_sum_all_0[idx, 1, 0, :])
+        x = np.asarray(thr_sum_all_0[idx + n_artscen, 0, 0, :])
+        y = np.asarray(thr_sum_all_0[idx + n_artscen, 1, 0, :])
         axs1[0, 0].plot(x, y, '.', color=fig9_colors[idx, :])
         axs1[0, 0].set_xlabel('Measured monopolar threshold (dB)')
         axs1[0, 0].set_ylabel('Fit monopolar threshold (dB)')
@@ -131,8 +146,8 @@ def fig9_summary():
         axs1[0, 0].set_ylim([30, 70])
 
     for idx, scen in enumerate(scenarios[n_artscen:]):  # Panel C
-        x = np.asarray(thr_sum_all_0[idx, 0, 1, :])
-        y = np.asarray(thr_sum_all_0[idx, 1, 1, :])
+        x = np.asarray(thr_sum_all_0[idx + n_artscen, 0, 1, :])
+        y = np.asarray(thr_sum_all_0[idx + n_artscen, 1, 1, :])
         axs1[1, 0].plot(x, y, '.', color=fig9_colors[idx, :])
         axs1[1, 0].set_xlabel('Measured tripolar threshold (dB)')
         axs1[1, 0].set_ylabel('Fit tripolar threshold (dB)')
@@ -140,8 +155,8 @@ def fig9_summary():
         axs1[1, 0].spines['right'].set_visible(False)
 
     for idx, scen in enumerate(scenarios[n_artscen:]):  # Panel B
-        x = np.asarray(thr_sum_all_1[idx, 0, 0, :])
-        y = np.asarray(thr_sum_all_1[idx, 1, 0, :])
+        x = np.asarray(thr_sum_all_1[idx + n_artscen, 0, 0, :])
+        y = np.asarray(thr_sum_all_1[idx + n_artscen, 1, 0, :])
         axs1[0, 1].plot(x, y, '.', color=fig9_colors[idx, :])
         axs1[0, 1].set_xlabel('Measured monopolar threshold (dB)')
         axs1[0, 1].set_ylabel('Fit monopolar threshold (dB)')
@@ -151,8 +166,8 @@ def fig9_summary():
         axs1[0, 1].set_ylim([30, 70])
 
     for idx, scen in enumerate(scenarios[n_artscen:]):  # Panel D
-        x = np.asarray(thr_sum_all_1[idx, 0, 1, :])
-        y = np.asarray(thr_sum_all_1[idx, 1, 1, :])
+        x = np.asarray(thr_sum_all_1[idx + n_artscen, 0, 1, :])
+        y = np.asarray(thr_sum_all_1[idx + n_artscen, 1, 1, :])
         axs1[1, 1].plot(x, y, '.', color=fig9_colors[idx, :])
         axs1[1, 1].set_xlabel('Measured tripolar threshold (dB)')
         axs1[1, 1].set_ylabel('Fit tripolar threshold (dB)')
@@ -220,6 +235,31 @@ def fig9_summary():
     figname = 'Fig9_fit_summary.pdf'
     plt.savefig(figname, format='pdf', pad_inches=0.1)
     plt.show()
+
+    plt.figure()
+    dist_corr = np.zeros(nscen)
+    dist_corr_p = np.zeros(nscen)
+
+    signif = []
+    near_signif = []
+    not_signif = []
+
+    for idx, corr in enumerate(dist_corr_0):
+        if dist_corr_p_0[idx] > 0.1:
+            not_signif.append(idx+3)
+        elif dist_corr_p_0[idx] <= 0.1 and dist_corr_p_0[idx] > 0.05:
+            near_signif.append(idx)
+        else:
+            signif.append(idx)
+
+
+    sns.swarmplot(dist_corr_0)
+    # sns.swarmplot(dist_corr_0[signif], color='black')
+    # sns.swarmplot(dist_corr_0[near_signif], color='gray')
+    # sns.swarmplot(dist_corr_0[not_signif], color='black', marker='$\circ$', s=6)
+    plt.show()
+
+
 
 
 if __name__ == '__main__':

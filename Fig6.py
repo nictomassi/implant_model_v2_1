@@ -14,6 +14,13 @@ def fig_scenario_inverse_results():
     plt.rcParams['font.size'] = 12
     plt.rcParams['axes.linewidth'] = 2
 
+    # Directory names
+    new_dir_suffix = 'R%d' % R_EXT + '_' + 'std_%.1f' % ACT_STDREL + '_thr_%d' % THRTARG
+    # offset = len(cp.FWD_OUT_PRFIX)
+    INV_OUT_PRFIX = 'INV_OUTPUT/'
+    INVOUTPUTDIR = INV_OUT_PRFIX + new_dir_suffix
+
+
     # All on one plot
     figrows = 3
     figcols = 3

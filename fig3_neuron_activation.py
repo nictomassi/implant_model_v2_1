@@ -11,7 +11,7 @@ def fig3_neuron_activation():
 
     mpl.rcParams['font.family'] = 'Arial'
 
-    espace = 0.85
+    espace = 1.1
     if espace == 0.85:
         e_txt = '085'
     elif espace == 1.1:
@@ -21,7 +21,12 @@ def fig3_neuron_activation():
     es_text = '_espace_' + e_txt
 
     font = findfont(FontProperties(family=['Arial']))
-    activation_file = FWDOUTPUTDIR + 'neuronact_' + STD_TEXT + es_text + '.npz'
+    # Rename fwd and inverse output directories
+    new_dir_suffix = 'R%d' % R_EXT + '_' + 'std_%.1f' % ACT_STDREL + '_thr_%d' % THRTARG
+    # offset = len(cp.FWD_OUT_PRFIX)
+    FWD_OUT_PRFIX = 'FWD_OUTPUT/'
+    FWDOUTPUTDIR = FWD_OUT_PRFIX + new_dir_suffix
+    activation_file = FWDOUTPUTDIR + '/neuronact_' + STD_TEXT + es_text + '.npz'
     print("Activation file: ", activation_file)
     data = np.load(activation_file, allow_pickle=True)
     surv_vals = data['arr_0']
@@ -34,7 +39,7 @@ def fig3_neuron_activation():
               str(np.min(rpos_vals)) + "_" + str(np.max(rpos_vals)) + hires
 
 
-    params_file = FWDOUTPUTDIR + 'simParams' + descrip + '.pickle'
+    params_file = FWDOUTPUTDIR + '/simParams' + descrip + es_text + '.pickle'
     # sp = np.load(params_file + '.npy', allow_pickle=True)
     with open(params_file, 'rb') as f:
         sp = pickle.load(f)
@@ -44,7 +49,7 @@ def fig3_neuron_activation():
     posvals -= posvals[-1]/2.0
 
     # Load monopolar data
-    datafile = FWDOUTPUTDIR + "Monopolar_2D_" + STD_TEXT + es_text + ".csv"
+    datafile = FWDOUTPUTDIR + "/Monopolar_2D_" + STD_TEXT + es_text + ".csv"
     file = open(datafile)
     numlines = len(file.readlines())
     file.close()
@@ -59,7 +64,7 @@ def fig3_neuron_activation():
             mono_thr[i, :] = row
 
     # Load tripolar data
-    datafile = FWDOUTPUTDIR + "Tripolar_09_2D_" + STD_TEXT + es_text + ".csv"
+    datafile = FWDOUTPUTDIR + "/Tripolar_09_2D_" + STD_TEXT + es_text + ".csv"
     file = open(datafile)
     numlines = len(file.readlines())
     file.close()
@@ -81,9 +86,9 @@ def fig3_neuron_activation():
     plt_rpos_vals = [-0.5, 0.0, 0.5]  # desired rpos values to be plotted
     nrpos = len(plt_rpos_vals)
     fig, axs = plt.subplots(nrpos, nsurv, sharex=True, sharey=True, figsize=(5, 8))
-    plt.figtext(0.03, 0.88, 'A', fontsize=20, weight='bold')
-    plt.figtext(0.03, 0.62, 'B', fontsize=20, weight='bold')
-    plt.figtext(0.03, 0.33, 'C', fontsize=20, weight='bold')
+    plt.figtext(0.015, 0.89, 'A', fontsize=20, weight='bold')
+    plt.figtext(0.015, 0.62, 'B', fontsize=20, weight='bold')
+    plt.figtext(0.015, 0.34, 'C', fontsize=20, weight='bold')
 
     for i, val in enumerate(plt_surv_vals):
         theidx = np.argmin(np.abs(surv_vals - val))
@@ -113,17 +118,18 @@ def fig3_neuron_activation():
         # place threshold values here
         xlimit = [-4, 4]
         ax.set_xlim((xlimit[0], xlimit[1]))
-        ax.set_yticks([0, 0.05, 0.1])
+        ax.set_ylim((0.0, 0.08))
+        ax.set_yticks([0, 0.04, 0.08])
         ax.spines.right.set_visible(False)
         ax.spines.top.set_visible(False)
         ax.label_outer()
         if col == (nsurv - 1):
             mytext = 'Distance = ' + str(1 - plt_rpos_vals[row]) + ' mm'
-            ax.text(4.0, 0.08, mytext, horizontalalignment='right')
+            ax.text(4.0, 0.075, mytext, horizontalalignment='right')
             m_thr_text = "Monopolar thr.: %.2f dB" % mono_thr[survidxs[col], rposidxs[row]]
             t_thr_text = "Tripoloar thr.: %.2f dB" % tripol_thr[survidxs[col], rposidxs[row]]
-            ax.text(4.0, 0.07, m_thr_text, horizontalalignment='right')
-            ax.text(4.0, 0.06, t_thr_text, horizontalalignment = 'right')
+            ax.text(4.0, 0.068, m_thr_text, horizontalalignment='right')
+            ax.text(4.0, 0.061, t_thr_text, horizontalalignment = 'right')
 
             print('surv ', titletext, ' dist ', str(1 - plt_rpos_vals[row]), ' Thr: ', mono_thr[survidxs[col],
                         rposidxs[row]], ' and ', tripol_thr[survidxs[col], rposidxs[row]])

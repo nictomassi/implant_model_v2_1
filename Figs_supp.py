@@ -10,6 +10,7 @@ from common_params import *  # import common values across all models
 def summary_four_subjects(subjects, f_name, unsupervised):
     # Key constants to set
     save_fig = True
+    save_eps_too = False
     plt.rc('xtick', labelsize=8)
     plt.rc('ytick', labelsize=8)
 
@@ -86,8 +87,9 @@ def summary_four_subjects(subjects, f_name, unsupervised):
         if save_fig:
             save_file_name = INVOUTPUTDIR + f_name + '.png'
             fig.savefig(save_file_name)
-            save_file_name = INVOUTPUTDIR + f_name + '.eps'
-            fig.savefig(save_file_name, format='eps')
+            if save_eps_too:
+                save_file_name = INVOUTPUTDIR + f_name + '.eps'
+                fig.savefig(save_file_name, format='eps')
 
         # # test correlation figure
         # if not use_fwd_model:

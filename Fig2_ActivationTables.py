@@ -61,7 +61,7 @@ def fig2_activation_tables():
     ax3.legend(loc=(0.745, 0.82), prop={'size': 14})
     leg3 = ax3.get_legend()
     leg3.legend_handles[0].set_color('black')
-    plt.savefig('Fig2_ActivationTables.eps', format='eps')
+    plt.savefig('Fig2_ActivationTables.jpg', format='jpg')
 
     plt.show()
 

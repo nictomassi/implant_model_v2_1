@@ -45,35 +45,35 @@ if_save_npy = True
 
 # For optimizing fit to thresholds need e_field, sim_params, sigvals
 # This is for a single electrode
-def objectivefunc_lmfit(p, sigvals, sim_params, f_par, e_field, thr_goals, this_elec):
-    nel = len(sim_params['electrodes']['zpos'])
-    vals = p.valuesdict()
-    show_retval = False
-
-    sim_params['electrodes']['rpos'] = vals['rpos_val']
-    tempsurv = np.zeros(nel)
-    tempsurv[:] = vals['surv_val']
-    print('tempsurv = ', tempsurv)
-
-    sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
-                                                             tempsurv, simParams['grid']['z'])
-
-    # Call for monopolar then tripolar
-    sim_params['channel']['sigma'] = sigvals[0]
-    thresh_mp = gt.get_thresholds(e_field, f_par, sim_params)
-    sim_params['channel']['sigma'] = sigvals[1]
-    thresh_tp = gt.get_thresholds(e_field, f_par, sim_params)
-    mp_err = np.abs(thresh_mp[0] - thr_goals['thrmp_db'][this_elec])
-    tp_err = np.abs(thresh_tp[0] - thr_goals['thrtp_db'][this_elec])
-    if np.isnan(tp_err):
-        tp_err = 0.0
-    mean_error = (mp_err + tp_err) / 2.0
-    if show_retval:
-        print('Mean error (dB) = ', mean_error)
-
-    retval = [mp_err, tp_err]
-    return retval
-
+# def objectivefunc_lmfit(p, sigvals, sim_params, f_par, e_field, thr_goals, this_elec):
+#     nel = len(sim_params['electrodes']['zpos'])
+#     vals = p.valuesdict()
+#     show_retval = False
+#
+#     sim_params['electrodes']['rpos'] = vals['rpos_val']
+#     tempsurv = np.zeros(nel)
+#     tempsurv[:] = vals['surv_val']
+#     print('tempsurv = ', tempsurv)
+#
+#     sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
+#                                                              tempsurv, simParams['grid']['z'])
+#
+#     # Call for monopolar then tripolar
+#     sim_params['channel']['sigma'] = sigvals[0]
+#     thresh_mp = gt.get_thresholds(e_field, f_par, sim_params)
+#     sim_params['channel']['sigma'] = sigvals[1]
+#     thresh_tp = gt.get_thresholds(e_field, f_par, sim_params)
+#     mp_err = np.abs(thresh_mp[0] - thr_goals['thrmp_db'][this_elec])
+#     tp_err = np.abs(thresh_tp[0] - thr_goals['thrtp_db'][this_elec])
+#     if np.isnan(tp_err):
+#         tp_err = 0.0
+#     mean_error = (mp_err + tp_err) / 2.0
+#     if show_retval:
+#         print('Mean error (dB) = ', mean_error)
+#
+#     retval = [mp_err, tp_err]
+#     return retval
+#
 
 # For optimizing fit to thresholds need e_field, sim_params, sigvals
 # This is for all electrodes at once
@@ -84,19 +84,44 @@ def objectivefunc_lmfit_all(par, sigvals, sim_params, f_par, e_field, thr_goals)
     show_retval = True  # helpful to track progress of the fitting process
 
     sim_params['electrodes']['rpos'] = np.zeros(nel)
-    for i in range(0, nel):
-        varname = 'v_%i' % i
-        myvalue = vals[varname]
-        sim_params['electrodes']['rpos'][i] = myvalue
+    if not tp_extend:
+        for i in range(0, nel-2):
+            varname = 'v_%i' % i
+            myvalue = vals[varname]
+            sim_params['electrodes']['rpos'][i+1] = myvalue
+            sim_params['electrodes']['rpos'][0] = sim_params['electrodes']['rpos'][1]
+            sim_params['electrodes']['rpos'][-1] = sim_params['electrodes']['rpos'][-2]
 
-    tempsurv = np.zeros(nel)
-    for i, loopval in enumerate(range(nel, 2 * nel)):
-        varname = 'v_%i' % (i + nel)
-        myvalue = vals[varname]
-        tempsurv[i] = myvalue
+            tempsurv = np.zeros(nel-2)
+            tempsurv2 = np.zeros(nel)
+            for i, loopval in enumerate(range(nel-2, 2 * (nel-2))):
+                varname = 'v_%i' % (i + nel-2)
+                # print('i: ', i, ' loopval: ', loopval, ' varname: ', varname)
+                myvalue = vals[varname]
+                tempsurv[i] = myvalue
+            tempsurv2[1:nel-1] = tempsurv
+            tempsurv2[0] = tempsurv2[1]
+            tempsurv2[-1] = tempsurv2[-2]
 
+    else:
+        for i in range(0, nel):
+            varname = 'v_%i' % i
+            myvalue = vals[varname]
+            sim_params['electrodes']['rpos'][i] = myvalue
+
+        tempsurv = np.zeros(nel)
+        for i, loopval in enumerate(range(nel, 2 * nel)):
+            varname = 'v_%i' % (i + nel)
+            myvalue = vals[varname]
+            tempsurv[i] = myvalue
+
+            tempsurv[0] = tempsurv[1]
+            tempsurv[-1] = tempsurv[-2]
+
+    # sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
+    #                                          tempsurv, simParams['grid']['z'])
     sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
-                                                             tempsurv, simParams['grid']['z'])
+                                                             tempsurv2, simParams['grid']['z'])
 
     # Call for monopolar then tripolar
     sim_params['channel']['sigma'] = sigvals[0]
@@ -110,13 +135,17 @@ def objectivefunc_lmfit_all(par, sigvals, sim_params, f_par, e_field, thr_goals)
     # retval = np.append(np.subtract(thresh_mp[0], thr_goals['thrmp_db']), 0)
     mp_diff = np.subtract(thresh_mp[0], thr_goals['thrmp_db'])
     tp_diff = np.subtract(thresh_tp[0][1:nel - 1], thr_goals['thrtp_db'][1:nel - 1])
+
     tempzero = np.zeros(1)
-    retval = np.concatenate((mp_diff, tempzero, tp_diff, tempzero))
+    if tp_extend:
+        retval = np.concatenate((mp_diff, tempzero, tp_diff, tempzero))
+    else:
+        retval = np.concatenate((mp_diff[1:-1], tp_diff))
     # Returns a vector of errors, with the first and last of the tripolar errors set to zero
     # because they can't be calculated
     if show_retval:  # helpful for debugging
         scen = simParams['run_info']['scenario']
-        print('subj/scen: ', scen, '; tempsurv[4] = ', '%.3f' % tempsurv[4], '; rpos[4]= ',
+        print('subj/scen: ', scen, '; tempsurv[4] = ', '%.3f' % float(tempsurv[4]), '; rpos[4]= ',
               '%.3f' % sim_params['electrodes']['rpos'][4],
               '; Mean abs error (dB) = ', '%.3f' % mean_error, '; Max error (dB) = ',
               '%.3f' % np.nanmax(np.abs(retval)))
@@ -185,6 +214,12 @@ def find_closest(x1, y1, x2, y2):  # returns indices of the point on each curve 
 
     return min_idx
 
+def is_scenario(scen):  # test whether this is a scenario or subject
+    # if this scenario is a subject, set use_forward_model to be false
+    if (scen[0] == 'A' or scen[0] == 'S') and scen[1:3].isnumeric():
+        return False  # it's a subject
+    else:
+        return True
 
 def inverse_model_combined(mode):  # Start this script
 
@@ -256,18 +291,13 @@ def inverse_model_combined(mode):  # Start this script
 
     for scen in range(0, len(scenarios)):
         scenario = scenarios[scen]
-        first_let = scenario[0]
-        use_fwd_model = True
 
-        # if this scenario is a subject, set use_forward_model to be false
-        if (first_let == 'A' or first_let == 'S') and scenario[1:3].isnumeric():
-            use_fwd_model = False
+        use_fwd_model = is_scenario(scenario)
 
         simParams['run_info']['scenario'] = scenario
 
         if use_fwd_model:
             [survVals, electrodes['rpos'], espace] = s_scen.set_scenario(scenario, NELEC)
-
         else:
             subject = scenario
             retval = subject_data.subj_thr_data(subject)
@@ -517,23 +547,38 @@ def inverse_model_combined(mode):  # Start this script
             fitsurvvals[0] = fitsurvvals[1]
             fitsurvvals[-1] = fitsurvvals[-2]
 
-            initvec = np.append(fitrposvals, fitsurvvals)
+            if not tp_extend:
+                initvec = np.append(fitrposvals[1:-1], fitsurvvals[1:-1])
+                for i, val in enumerate(initvec):  # place values in to the par object
+                    if i < NELEC - 2:
+                        lb = -0.95  # lower and upper bounds for position
+                        ub = 0.95
+                    elif NELEC - 2 <= i < 2 * (NELEC - 2):
+                        lb = 0.0  # density
+                        ub = 1.0
+                    else:  ## TODO leftover from tryng to fit external resistivity. Can remove
+                        lb = 125
+                        ub = 2500
 
-            # test
-            # initvec[NELEC:] = 0.5
+                    par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
 
-            for i, val in enumerate(initvec):  # place values in to the par object
-                if i < NELEC:
-                    lb = -0.95  # lower and upper bounds for position
-                    ub = 0.95
-                elif NELEC <= i < 2 * NELEC:
-                    lb = 0.0  # density
-                    ub = 1.0
-                else:  ## TODO leftover from tryng to fit external resistivity. Can remove
-                    lb = 125
-                    ub = 2500
+                # end block for single electrode fits during the combined fit
 
-                par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
+            else:
+                initvec = np.append(fitrposvals, fitsurvvals)
+
+                for i, val in enumerate(initvec):  # place values in to the par object
+                    if i < NELEC:
+                        lb = -0.95  # lower and upper bounds for position
+                        ub = 0.95
+                    elif NELEC <= i < 2 * NELEC:
+                        lb = 0.0  # density
+                        ub = 1.0
+                    else:  ## TODO leftover from tryng to fit external resistivity. Can remove
+                        lb = 125
+                        ub = 2500
+
+                    par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
 
             # end block for single electrode fits during the combined fit
 
@@ -558,7 +603,7 @@ def inverse_model_combined(mode):  # Start this script
                     ub = 0.9
                 par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
 
-        # Contraint on maximum change of electrode posiiton for adjacent electrodes
+        # Constraint on maximum change of electrode position for adjacent electrodes
         #         par.add('max_adj', expr=max_diff_adjacent(x, par), max=0.5)
 
         if use_minimizer:  # Now do the main fitting for all electrodes at once
@@ -578,23 +623,44 @@ def inverse_model_combined(mode):  # Start this script
                 result = minner.minimize(method='least_squares', ftol=fit_tol, diff_step=0.1)
                 # result = minner.minimize(method='Nelder-Mead', options={'fatol': fit_tol})
 
-            for i in range(NELEC):  # store the results in the right place
-                vname = 'v_%i' % i
-                fitrposvals[i] = result.params[vname]
-                vname = 'v_%i' % (i + NELEC)
-                fitsurvvals[i] = result.params[vname]
+            if not tp_extend:  # store the results in the right place
+                for i in range(NELEC-2):
+                    vname = 'v_%i' % i
+                    fitrposvals[i+1] = result.params[vname]
+                    vname = 'v_%i' % (i + NELEC - 2)
+                    fitsurvvals[i+1] = result.params[vname]
+
+                fitrposvals[0] = fitrposvals[1]
+                fitrposvals[-1] = fitrposvals[-2]
+                fitsurvvals[0] = fitsurvvals[1]
+                fitsurvvals[-1] = fitsurvvals[-2]
+
+            else:
+                for i in range(NELEC):
+                    vname = 'v_%i' % i
+                    fitrposvals[i] = result.params[vname]
+                    vname = 'v_%i' % (i + NELEC)
+                    fitsurvvals[i] = result.params[vname]
+
 
         else:  # use standard scipy.minimize
             # initvec[0:NELEC] = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
             #                     0.01, 0.01, 0.01]
             # initvec[NELEC:] = [0.76, 0.85, 0.66, 0.35, 0.41, 0.68, 0.88, 0.76, 0.83, 0.66, 0.38, 0.41, 0.58, 0.78,
             #                    0.82, 0.78]
-            bnds = ((-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85),
-                    (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85),
-                    (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (0.05, 0.95), (0.05, 0.95),
+            bnds = ((-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9),
+                    (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9),
+                    (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (0.05, 0.95), (0.05, 0.95),
                     (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95),
                     (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95),
                     (0.05, 0.95), (0.05, 0.95))
+            # bnds = ((-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85),
+            #         (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85),
+            #         (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (0.05, 0.95), (0.05, 0.95),
+            #         (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95),
+            #         (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95),
+            #         (0.05, 0.95), (0.05, 0.95))
+
             result = opt.minimize(objectivefunc_minimize_all, initvec, args=(sigmaVals, simParams, fp, act_vals,
                                                                              thr_data), method='SLSQP', jac=None,
                                   bounds=bnds, options={'ftol': fit_tol})
@@ -623,9 +689,8 @@ def inverse_model_combined(mode):  # Start this script
         simParams['channel']['sigma'] = sigmaVals[1]
         thrsimtp = gt.get_thresholds(act_vals, fp, simParams)
 
-        errvals = [np.subtract(thrsimmp[0], thr_data['thrmp_db']), np.subtract(thrsimtp[0][1:NELEC - 1],
-                                                                               thr_data['thrtp_db'][1:NELEC - 1])]
-        thrsim = [[thrsimmp[0]], [thrsimtp[0]]]
+        errvals = np.abs(np.subtract(thrsimmp[0], thr_data['thrmp_db'])), np.abs(np.subtract(thrsimtp[0][1:NELEC - 1], thr_data['thrtp_db'][1:NELEC - 1]))
+        thrsim = [thrsimmp[0]], [thrsimtp[0]]
         thrtargs = [[thr_data['thrmp_db']], [thr_data['thrtp_db']]]
 
         # Summary data. Monopolar and tripolar errors saved separately.
@@ -639,13 +704,28 @@ def inverse_model_combined(mode):  # Start this script
 
         if use_fwd_model:
             [survvals, rposvals, espace] = s_scen.set_scenario(scenario, NELEC)
-            rposerrs = np.subtract(rposvals, fitrposvals)
-            survivalerrs = np.subtract(survvals, fitsurvvals)
+            if not tp_extend:
+                rposerrs = np.subtract(rposvals[1:-1], fitrposvals[1:-1])
+                survivalerrs = np.abs(np.subtract(survvals[1: -1], fitsurvvals[1: -1]))
+            else:
+                rposerrs = np.subtract(rposvals, fitrposvals)
+                survivalerrs = np.abs(np.subtract(survvals, fitsurvvals))
+
             rpos_summary.append([rposvals, fitrposvals])
             rpos_err_metric = np.mean(np.abs(rposerrs))
             rpos_err_summary[scen] = rpos_err_metric
             surv_err_summary[scen] = np.mean(np.abs(survivalerrs))
-            [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(1 - rposvals, 1 - fitrposvals)
+
+            if not tp_extend:
+                distvals = 1 - rposvals[1:-1]
+                if np.std(distvals) == 0.0:
+                    distvals += np.random.normal(0.0, 1e-20, size=len(distvals))  # to prevent a nan from stats.pearsonr
+                    # distvals[-1] += 1e-8  # to prevent a nan from stats.pearsonr
+                # [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(1 - rposvals[1:-1], 1 - fitrposvals[1:-1])
+                [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(distvals, 1 - fitrposvals[1:-1])
+
+            else:
+                [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(1 - rposvals, 1 - fitrposvals)
 
             # Save values in CSV format
             save_file_name = INVOUTPUTDIR + scenario + '_fitResults_' + 'combined.csv'
@@ -654,11 +734,26 @@ def inverse_model_combined(mode):  # Start this script
             survivalerrs = np.empty(NELEC)
 
             if np.any(ct_vals):
-                rposerrs = np.subtract(fitrposvals, ct_vals)
-                rpos_err_metric = np.mean(np.abs(rposerrs))
-                rpos_summary.append([fitrposvals, ct_vals])
-                rpos_err_summary[scen] = rpos_err_metric
-                [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(1 - ct_vals, 1 - fitrposvals)
+                if not tp_extend:
+                    rposerrs = np.abs(np.subtract(fitrposvals[1:-1], ct_vals[1:-1]))
+                    rpos_summary.append([fitrposvals[1:-1], ct_vals[1:-1]])
+                    rpos_err_metric = np.mean(np.abs(rposerrs))
+                    rpos_err_summary[scen] = rpos_err_metric
+
+                    [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(1 - rposvals[1:-1], 1 - fitrposvals[1:-1])
+
+                else:
+                    rposerrs = np.abs(np.subtract(fitrposvals, ct_vals))
+                    rpos_err_metric = np.mean(np.abs(rposerrs))
+                    rpos_summary.append([fitrposvals, ct_vals])
+                    rpos_err_summary[scen] = rpos_err_metric
+                    [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(1 - rposvals, 1 - fitrposvals)
+
+                # rposerrs = np.abs(np.subtract(fitrposvals, ct_vals))
+                # rpos_err_metric = np.mean(np.abs(rposerrs))
+                # rpos_summary.append([fitrposvals, ct_vals])
+                # rpos_err_summary[scen] = rpos_err_metric
+                # [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(1 - ct_vals, 1 - fitrposvals)
             else:
                 rposerrs = np.empty(NELEC)
                 rpos_err_metric = np.NAN
@@ -680,7 +775,7 @@ def inverse_model_combined(mode):  # Start this script
                           'SurvError (Nan)']
 
             data_writer.writerow(header)
-            for row in range(0, NELEC):
+            for row in range(NELEC):
                 t1 = row
                 t2 = thr_data['thrmp_db'][row]
                 t3 = thr_data['thrtp_db'][row]
@@ -699,25 +794,18 @@ def inverse_model_combined(mode):  # Start this script
                 else:
                     t8 = np.NaN
                 t9 = fitsurvvals[row]
-                t10 = rposerrs[row]
+                if row == 0 or row == NELEC-1:
+                    t10 = np.nan
+                else:
+                    t10 = rposerrs[row-1]  # with tp_extend, only has 14 values
                 if use_fwd_model:
-                    t11 = survivalerrs[row]
+                    if row == 0 or row == NELEC - 1:
+                        t11 = np.nan
+                    else:
+                        t11 = survivalerrs[row-1]
                 else:
                     t11 = np.NaN
 
-                # t1 = row
-                # t2 = rposvals[row]
-                # t3 = survvals[row]
-                # t4a = thrsim[0][0]
-                # t4 = t4a[row]
-                # t5a = thrsim[1][0]
-                # t5 = t5a[row]
-                # # t6 = opt_result.x[row]
-                # # t7 = opt_result.x[NELEC + row]
-                # t6 = fitrposvals[row]
-                # t7 = fitsurvvals[row]
-                # t8 = rposerrs[row]
-                # t9 = survivalerrs[row]
                 data_writer.writerow([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11])
 
             # Done with the values for each electrode
@@ -780,16 +868,18 @@ def inverse_model_combined(mode):  # Start this script
         data_writer.writerow(header)
         avg_rpos_err = 0.0
         for row in range(num_scen):
-            if use_fwd_model:
-                data_writer.writerow([scenarios[row], '%.4f' % thresh_err_summary[row, 0],
-                                      '%.4f' % thresh_err_summary[row, 1],
-                                      '%.4f' % rpos_err_summary[row], '%.4f' % surv_err_summary[row],
-                                      '%.4f' % dist_corr[row], '%.5f' % dist_corr_p[row]])
+            if is_scenario(scenarios[row]):
+                data_writer.writerow([scenarios[row], '%.4f' % float(thresh_err_summary[row, 0]),
+                                      '%.4f' % float(thresh_err_summary[row, 1]),
+                                      '%.4f' % float(rpos_err_summary[row]),
+                                      '%.4f' % float(surv_err_summary[row]),
+                                      '%.4f' % float(dist_corr[row]),
+                                      '%.5f' % float(dist_corr_p[row])])
             else:
-                data_writer.writerow([scenarios[row], '%.4f' % thresh_err_summary[row, 0],
-                                      '%.4f' % thresh_err_summary[row, 1],
-                                      '%.4f' % rpos_err_summary[row], '%.4f' % np.nan,
-                                      '%.4f' % dist_corr[row], '%.5f' % dist_corr_p[row]])
+                data_writer.writerow([scenarios[row], '%.4f' % float(thresh_err_summary[row, 0]),
+                                      '%.4f' % float(thresh_err_summary[row, 1]),
+                                      '%.4f' % float(rpos_err_summary[row]), '%.4f' % np.nan,
+                                      '%.4f' % float(dist_corr[row]), '%.5f' % float(dist_corr_p[row])])
 
             avg_rpos_err += rpos_err_summary[row]
 
