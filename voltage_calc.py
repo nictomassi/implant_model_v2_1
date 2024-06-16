@@ -56,10 +56,10 @@ def integ_func(x, m_max, pratio, rad, reval, z, theta, relec):  # This is the Be
 
 # Main parameters to vary
 radius = 1.0  # cylinder radius
-res_int = 70.0  # internal resistivity
-res_ext = 70.0  # external resistivity
+res_int = 250.0  # internal resistivity
+res_ext = 250.0  # external resistivityß
 
-output_filename = '18May2024_MedResolution_Rext70.dat'
+output_filename = '16June2024_MedResolution_Rext250_Rint250.dat'
 
 pr = cProfile.Profile()
 

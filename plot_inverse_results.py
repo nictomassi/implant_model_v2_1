@@ -42,10 +42,13 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised):
     yl = 'Threshold (dB)'
     mean_thr_err = (np.nanmean(np.abs(np.array(thrsim[0]) - np.array(thrtargs[0]))) +
                     np.nanmean(np.abs(np.array(thrsim[1]) - np.array(thrtargs[1])))) / 2.0
+
+
     if use_fwd_model:
         title_text = 'Known scenario thresholds: ' + this_case + '; mean thr error (dB): ' + '%.2f' % mean_thr_err
     else:
-        title_text = 'Subject thresholds: ' + this_case + '; mean thr error (dB): ' + '%.2f' % mean_thr_err
+        title_text = ('Subject thresholds: ' + this_case + ' ' + R_TEXT + ' ' + TARG_TEXT +
+                      '; mean thr error (dB): ' + '%.2f' % mean_thr_err)
     axs[0].set(xlabel='Electrode number', ylabel=yl, title=title_text)
     axs[0].set_xlim(0, 17)
     axs[0].legend(loc='upper right', ncol=2)
@@ -56,9 +59,11 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised):
         if np.any(ct_vals):
             [dist_corr, dist_corr_p] = stats.pearsonr(1 - ct_vals, 1 - fitrposvals)
     title_text = 'Fit and actual positions; mean position error (mm): ' + '%.2f' % rpos_err_metric
-    axs[1].plot(xvals[1:l_e] + 0.1, 1 - fitrposvals[1:l_e], marker='o', color='gray', label='fit')
+    # axs[1].plot(xvals[1:l_e] + 0.1, 1 - fitrposvals[1:l_e], marker='o', color='gray', label='fit')
+    axs[1].plot(xvals + 0.1, 1 - fitrposvals, marker='o', color='gray', label='fit')
+
     if use_fwd_model:
-        axs[1].plot(xvals[1:l_e] - 0.1, 1 - rposvals[1:l_e], marker='o', color='black', label='actual')
+        axs[1].plot(xvals - 0.1, 1 - rposvals, marker='o', color='black', label='actual')
     else:
         if np.any(ct_vals):
             axs[1].plot(xvals - 0.1, 1 - ct_vals, marker='o', color='black', label='CT estimate')
@@ -119,9 +124,16 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised):
     axs3.set_xlim([0, 2])
     axs3.set_ylim([0, 1])
     # now plot initial guesses
-    axs3.plot(1 - initvec[0:NELEC], initvec[NELEC:], 'o', color='red')
-    for i in range(NELEC):
-        axs3.plot([1 - fitrposvals[i], 1 - initvec[i]], [fitsurvvals[i], initvec[NELEC + i]], color='black')
+    if not tp_extend:
+        axs3.plot(1 - initvec[0:NELEC-2], initvec[NELEC-2:], 'o', color='red')
+        for i in range(NELEC-2):
+            axs3.plot([1 - fitrposvals[i], 1 - initvec[i]], [fitsurvvals[i], initvec[NELEC-2 + i]], color='black')
+
+    else:
+        axs3.plot(1 - initvec[0:NELEC], initvec[NELEC:], 'o', color='red')
+        for i in range(NELEC):
+            axs3.plot([1 - fitrposvals[i], 1 - initvec[i]], [fitsurvvals[i], initvec[NELEC + i]], color='black')
+
     title_text = this_case + '  Mean position error (mm): ' + '%.2f' % rpos_err_metric
     fig3.suptitle(title_text, fontsize=14)
     axs3.text(1.75, 0.95, 'guess', color='red')

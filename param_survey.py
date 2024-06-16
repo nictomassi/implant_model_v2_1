@@ -10,15 +10,21 @@ import os
 
 # params to vary
 # external resistivity, stdrel, number of active neurons, minimization approach
-res_ext = 375.0  # should double-check that this matches the field table being used
+## planning resistivities of 70, 125, 250, 500, 1000
+res_ext = 250.0  # DOUBLE CHECK this in COMMON PARAMS. should double-check that this matches the field table being used
 # specify some fixed params
 
 # start by cycling through stdrel, # of active neurons
 # stdrel_vals = [0.125, 0.2, 0.5, 1, 2, 4, 8, 16, 32]
 # thrtarg_vals = [1, 2, 5, 10, 25, 50, 100, 200, 500, 1000]
-stdrel_vals = [2, 8]
-thrtarg_vals = [100, 500]
+stdrel_vals = [0.5, 1, 2, 4, 8]
+thrtarg_vals = [25, 50, 100, 500, 1000]
 
+# stdrel_vals = [2]
+# thrtarg_vals = [100]
+
+
+# Set up variables to store output
 n_std = len(stdrel_vals)
 n_thr = len(thrtarg_vals)
 mp_err_summ = np.zeros((n_std, n_thr))
@@ -28,11 +34,11 @@ dist_corr_sum = np.zeros((n_std, n_thr))
 n_corr_sig = np.zeros((n_std, n_thr))
 
 
-for stdrel in stdrel_vals:
-    espace = 1.1
-    for thrtarg in thrtarg_vals:
+for stdrel in stdrel_vals:  # loop on stdrel values
+    espace = 1.1  # set espace to get 2D fwd model
+    for thrtarg in thrtarg_vals:  # loop on target #
         # save file with key params
-        param_file = 'surv_params.txt'
+        param_file = 'surv_params.txt'  # param file to pass to the other model scripts
         tempdata = np.zeros(4)  # 4 values
         tempdata[0] = res_ext
         tempdata[1] = stdrel
@@ -78,8 +84,8 @@ for stdrel in stdrel_vals:
         data_file.close()
         fwd2D.fwd_model_2D('survey')
 
-        # Set espace back to 1.1 in surv_params.txt
-        espace = 0.85  ## TODO check this.
+
+        espace = 1.1  # Set espace back to 1.1 in surv_params.txt
         # save file with key params
         param_file = 'surv_params.txt'
         tempdata = np.zeros(4)  # 3 values
@@ -115,13 +121,18 @@ for stdrel in stdrel_vals:
 ###
 
         # Rename fwd and inverse output directories
-        new_dir_suffix = '_R%d' % res_ext + '_' + 'std_%.1f' % stdrel + '_thr_%d' % thrtarg
+        new_dir_suffix = 'R%d' % res_ext + '_' + 'std_%.1f' % stdrel + '_thr_%d' % thrtarg
         # offset = len(cp.FWD_OUT_PRFIX)
-        new_fwd_dir = cp.FWDOUTPUTDIR[:-1] + new_dir_suffix
-        os.rename(cp.FWDOUTPUTDIR, new_fwd_dir)
+        FWD_OUT_PRFIX = 'FWD_OUTPUT/'
+        FWDOUTPUTDIR = FWD_OUT_PRFIX + new_dir_suffix
+        INV_OUT_PRFIX = 'INV_OUTPUT/'
+        INVOUTPUTDIR = INV_OUT_PRFIX + new_dir_suffix
+
+        #new_fwd_dir = FWDOUTPUTDIR + new_dir_suffix
+        os.rename(cp.FWDOUTPUTDIR, FWDOUTPUTDIR)
         # offset = len(cp.INV_OUT_PRFIX)
-        new_inv_dir = cp.INVOUTPUTDIR[:-1] + new_dir_suffix
-        os.rename(cp.INVOUTPUTDIR, new_inv_dir)
+        #new_inv_dir = INVOUTPUTDIR + new_dir_suffix
+        os.rename(cp.INVOUTPUTDIR, INVOUTPUTDIR)
 
 ## clean up by removing param_file
 os.remove(param_file)
