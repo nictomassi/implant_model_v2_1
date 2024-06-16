@@ -7,13 +7,13 @@ NELEC = 16
 # ELEC_BASALPOS = 26.25  # in mm ** removed this 20 May 2024 to make sure electrode array is centered in neurons
 
 # Neural activation parameters
-R_EXT = 70.0   # ohm-cm
+R_EXT = 250.0   # ohm-cm
 R_TEXT = 'R' + str(round(R_EXT))
 THRTARG = 100.0
 TARG_TEXT = '_TARG' + str(round(THRTARG)) + '/'
 ACTR = 100.0
 ACTR_TEXT = '_ACTR' + str(round(ACTR)) + '_'
-ACT_STDREL = 4.0
+ACT_STDREL = 2.0
 STD_TEXT = 'STDR' + str(ACT_STDREL)
 STD_TEXT = STD_TEXT.replace('.', '_')
 
@@ -44,7 +44,11 @@ ct_uncertainty = 0.1  # uncertainty for CT values in case one wants to display i
 # scenario names beginning with 'A' or 'S' and followed by 2 numerals are considered subjects
 # other scenario names are considered to be associated with the forward model
 
+global tp_extend
+tp_extend = False # Whether to fit postion and density and end electrodes
+
 # Not used by the 2D exploration tool. These are left in for convenience
+global scenarios
 # scenarios = ['Gradual80R75']
 # scenarios = ['Uniform80R05']
 # scenarios = ['Uniform100R05', 'Uniform100R10', 'Uniform100R15']
@@ -80,34 +84,42 @@ ct_uncertainty = 0.1  # uncertainty for CT values in case one wants to display i
 # scenarios = ['S43']
 # all subjects with CT data
 # scenarios = ['RampRposSGradual80', 'S22']
-# scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80']
+# scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S42', 'S43']
 # scenarios = ['RampRposSGradual80']
-global scenarios
+
 scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S22', 'S27', 'S29', 'S38', 'S40', 'S41', 'S42',
              'S43', 'S46', 'S47', 'S49R', 'S50', 'S52', 'S53', 'S54', 'S55', 'S56', 'S57']
+# scenarios = ['RampRposSGradual80', 'S22', 'S42',]
+
 # scenarios = ['A014L']
 # File locations
 FWD_OUT_PRFIX = 'FWD_OUTPUT/'
-FWDOUTPUTDIR = FWD_OUT_PRFIX + R_TEXT + ACTR_TEXT + STD_TEXT + TARG_TEXT
+new_dir_suffix = 'R%d' % R_EXT + '_' + 'std_%.1f' % ACT_STDREL + '_thr_%d' % THRTARG +'/'
+# offset = len(cp.FWD_OUT_PRFIX)
+FWD_OUT_PRFIX = 'FWD_OUTPUT/'
+FWDOUTPUTDIR = FWD_OUT_PRFIX + new_dir_suffix
 INV_OUT_PRFIX = 'INV_OUTPUT/'
-INVOUTPUTDIR = INV_OUT_PRFIX + R_TEXT + ACTR_TEXT + STD_TEXT + TARG_TEXT
+INVOUTPUTDIR = INV_OUT_PRFIX + new_dir_suffix
+
+# FWDOUTPUTDIR = FWD_OUT_PRFIX + R_TEXT + ACTR_TEXT + STD_TEXT + TARG_TEXT
+# INV_OUT_PRFIX = 'INV_OUTPUT/'
+# INVOUTPUTDIR = INV_OUT_PRFIX + R_TEXT + ACTR_TEXT + STD_TEXT + TARG_TEXT
 
 if R_TEXT == 'R70':
     FIELDTABLE = '16May2024_MedResolution_Rext70_nonans.dat'
 elif R_TEXT == 'R125':
-    FIELDTABLE = '20Jan2024_MedResolution_Rext125_nonans.dat'
+    FIELDTABLE = '3June2024_MedResolution_Rext125_nonans.dat'
 elif R_TEXT == 'R250':
     FIELDTABLE = '18May2024_MedResolution_Rext250_nonans.dat'
 elif R_TEXT == 'R375':
     FIELDTABLE = '18May2024_MedResolution_Rext375.dat'
 elif R_TEXT == 'R500':
-    FIELDTABLE = '19Dec2023_MedResolution_Rext500.dat'
+    FIELDTABLE = '3June2024_MedResolution_Rext500.dat'
 elif R_TEXT == 'R750':
     FIELDTABLE = '18Jan2024_MedResolution_Rext750_nonans.dat'
 elif R_TEXT == 'R1000':
-    FIELDTABLE = '18Jan2024_MedResolution_Rext1000_nonans.dat'
+    FIELDTABLE = '3June2024_MedResolution_Rext1000_nonans.dat'
 elif R_TEXT == 'R125O':
     FIELDTABLE = '28Dec2023_MedResolution_Rext1250.dat'
 elif R_TEXT == 'R2500':
     FIELDTABLE = '7Dec2023_MedResolution_Rext2500_nonans.dat'
-
