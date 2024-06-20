@@ -214,12 +214,14 @@ def find_closest(x1, y1, x2, y2):  # returns indices of the point on each curve 
 
     return min_idx
 
+
 def is_scenario(scen):  # test whether this is a scenario or subject
     # if this scenario is a subject, set use_forward_model to be false
     if (scen[0] == 'A' or scen[0] == 'S') and scen[1:3].isnumeric():
         return False  # it's a subject
     else:
         return True
+
 
 def inverse_model_combined(mode):  # Start this script
 

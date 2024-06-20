@@ -6,8 +6,8 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-table1 = '16May2024_MedResolution_Rext70_nonans.dat'
-table2 = '18May2024_MedResolution_Rext70_nonans.dat'
+table1 = '18May2024_MedResolution_Rext250_nonans.dat'
+table2 = '24June2024_MedResolution_Rext250_Rint70_nonans.dat'
 
 with open(table1, 'rb') as combined_data:
     data = pickle.load(combined_data)
@@ -35,4 +35,3 @@ print('max of act_vals_diff: ', np.nanmax(np.abs((act_vals_diff[:]))))
 print('max of act_vals_reldiff: ', np.nanmax(np.abs((act_vals_reldiff[:]))))
 print('max of act_vals_diff_non_edge: ', np.nanmax(np.abs(act_vals_diff_non_edge[:])))
 print('max of act_vals_reldiff_non_edge: ', np.nanmax(np.abs((act_vals_reldiff_non_edge[:]))))
-print('more text')

@@ -11,6 +11,8 @@ def summary_four_subjects(subjects, f_name, unsupervised):
     # Key constants to set
     save_fig = True
     save_eps_too = False
+    save_pdf_too = True
+
     plt.rc('xtick', labelsize=8)
     plt.rc('ytick', labelsize=8)
 
@@ -52,9 +54,9 @@ def summary_four_subjects(subjects, f_name, unsupervised):
 
         fig.add_subplot(ax)
         ax = plt.Subplot(fig, inner[1])
-        ax.plot(xvals[1:l_e]+0.1, 1 - fitrposvals[1:l_e], marker='o', color='gray', label='fit')
+        ax.plot(xvals[1:l_e]+0.1, 1 - fitrposvals[1:l_e], marker='o', color='black', label='fit')
         if np.any(ct_vals):
-            ax.plot(xvals-0.1, 1 - ct_vals, marker='o', color='black', label='CT estimate')
+            ax.plot(xvals-0.1, 1 - ct_vals, marker='o', color='grey', label='CT estimate')
             # ax.fill_between(xvals-0.1, (1 - ct_vals) - ct_uncertainty, (1 - ct_vals) + ct_uncertainty,
             # color='black', alpha=0.1)
 
@@ -79,17 +81,17 @@ def summary_four_subjects(subjects, f_name, unsupervised):
         ax.set_xticks([2, 4, 6, 8, 10, 12, 14, 16])
         ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
 
-
-        # ax.legend()
-        # fig_consol.tight_layout()
         fig.add_subplot(ax)
         # could add plots of error (difference between desired/measured and fitted values)
         if save_fig:
-            save_file_name = INVOUTPUTDIR + f_name + '.png'
+            save_file_name = f_name + '.png'
             fig.savefig(save_file_name)
             if save_eps_too:
-                save_file_name = INVOUTPUTDIR + f_name + '.eps'
+                save_file_name = f_name + '.eps'
                 fig.savefig(save_file_name, format='eps')
+            if save_pdf_too:
+                save_file_name = f_name + '.pdf'
+                fig.savefig(save_file_name, format='pdf')
 
         # # test correlation figure
         # if not use_fwd_model:
@@ -106,8 +108,8 @@ def summary_four_subjects(subjects, f_name, unsupervised):
 
 
 if __name__ == '__main__':
-    txt_string = ['S22', 'S27', 'S38', 'S41']
-    fig_name = 'FigS1'
+    # txt_string = ['S22', 'S27', 'S38', 'S41']
+    # fig_name = 'FigS1'
 
     # txt_string = ['S43','S46', 'S47', 'S49R']
     # fig_name = 'FigS2'
@@ -115,8 +117,8 @@ if __name__ == '__main__':
     # txt_string = ['S50', 'S52', 'S53', 'S54']
     # fig_name = 'FigS3'
 
-    # txt_string = ['S55', 'S57']
-    # fig_name = 'FigS4'
+    txt_string = ['S55', 'S57']
+    fig_name = 'FigS4'
 
     unsupervised = False
     summary_four_subjects(txt_string, fig_name, unsupervised)

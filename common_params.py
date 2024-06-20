@@ -30,6 +30,7 @@ CHANNEL = {'source': 'manual', 'number': range(0, NELEC), 'config': 'pTP', 'sigm
            'current': 10000000000.0}
 GRID = {'r': 0.1, 'th': 0.0, 'z': np.arange(0, 33, 0.01)}  # mm
 RUN_INFO = {'scenario': 'scenario', 'run_time': [], 'run_duration': 0.0}
+global simParams
 simParams = {'cochlea': COCHLEA, 'electrodes': electrodes, 'channel': CHANNEL, 'grid': GRID, 'neurons': NEURONS,
              'run_info': RUN_INFO}
 
@@ -42,10 +43,10 @@ ct_uncertainty = 0.1  # uncertainty for CT values in case one wants to display i
 
 # NOTE!!
 # scenario names beginning with 'A' or 'S' and followed by 2 numerals are considered subjects
-# other scenario names are considered to be associated with the forward model
+# other scenario names are considered to be synthetice and for use with the forward model
 
 global tp_extend
-tp_extend = False # Whether to fit postion and density and end electrodes
+tp_extend = False  # Whether to fit postion and density and end electrodes
 
 # Not used by the 2D exploration tool. These are left in for convenience
 global scenarios
@@ -84,26 +85,22 @@ global scenarios
 # scenarios = ['S43']
 # all subjects with CT data
 # scenarios = ['RampRposSGradual80', 'S22']
-# scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S42', 'S43']
+scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S42', 'S43']
 # scenarios = ['RampRposSGradual80']
 
-scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S22', 'S27', 'S29', 'S38', 'S40', 'S41', 'S42',
-             'S43', 'S46', 'S47', 'S49R', 'S50', 'S52', 'S53', 'S54', 'S55', 'S56', 'S57']
+# scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S22', 'S27', 'S29', 'S38', 'S40', 'S41', 'S42',
+#              'S43', 'S46', 'S47', 'S49R', 'S50', 'S52', 'S53', 'S54', 'S55', 'S56', 'S57']
 # scenarios = ['RampRposSGradual80', 'S22', 'S42',]
 
 # scenarios = ['A014L']
 # File locations
 FWD_OUT_PRFIX = 'FWD_OUTPUT/'
-new_dir_suffix = 'R%d' % R_EXT + '_' + 'std_%.1f' % ACT_STDREL + '_thr_%d' % THRTARG +'/'
+new_dir_suffix = 'R%d' % R_EXT + '_' + 'std_%.1f' % ACT_STDREL + '_thr_%d' % THRTARG + '/'
 # offset = len(cp.FWD_OUT_PRFIX)
 FWD_OUT_PRFIX = 'FWD_OUTPUT/'
 FWDOUTPUTDIR = FWD_OUT_PRFIX + new_dir_suffix
 INV_OUT_PRFIX = 'INV_OUTPUT/'
 INVOUTPUTDIR = INV_OUT_PRFIX + new_dir_suffix
-
-# FWDOUTPUTDIR = FWD_OUT_PRFIX + R_TEXT + ACTR_TEXT + STD_TEXT + TARG_TEXT
-# INV_OUT_PRFIX = 'INV_OUTPUT/'
-# INVOUTPUTDIR = INV_OUT_PRFIX + R_TEXT + ACTR_TEXT + STD_TEXT + TARG_TEXT
 
 if R_TEXT == 'R70':
     FIELDTABLE = '16May2024_MedResolution_Rext70_nonans.dat'

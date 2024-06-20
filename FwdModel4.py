@@ -23,12 +23,10 @@ def fwd_model_4(mode):
         if os.path.exists(param_file):
             with open(param_file, newline='') as csvfile:
                 datareader = csv.reader(csvfile, delimiter=',')
-                ncol = len(next(datareader))
                 csvfile.seek(0)
                 for i, row in enumerate(datareader):
                     # Do the parsing
                     tempdata[i] = row[0]
-        res_ext = tempdata[0]
         NEURONS['act_stdrel'] = tempdata[1]
         NEURONS['thrtarg'] = tempdata[2]
         espace = tempdata[3]  # should be overridden by scenario/subject
@@ -40,9 +38,6 @@ def fwd_model_4(mode):
         print('fwd_model called with unrecognized mode: ', mode)
         exit()
 
-    # Needs cleanup
-    FASTZ = True  # use an interpolation method along z-axis
-
     # We depend on voltage and activation tables calculated using
     # voltage_calc.py and saved as a .dat file. the file is specified in common_params.py
     with open(FIELDTABLE, 'rb') as combined_data:
@@ -51,7 +46,7 @@ def fwd_model_4(mode):
 
     fp = data[0]
     fp['zEval'] = np.array(fp['zEval'])
-    vVals = data[1]
+    #  v_vals = data[1] #  voltage values not used
     act_vals = data[2]
     GRID['table'] = act_vals
 
@@ -59,8 +54,8 @@ def fwd_model_4(mode):
     COCHLEA['res2'] = fp['resExt'] * np.ones(NELEC)  # resistivities are in Ohm*cm (conversion to Ohm*mm occurs later)
     GRID['r'] = fp['rspace']  # only 1 of the 3 cylindrical dimensions can be a vector (for CYLINDER3D_MAKEPROFILE)
 
-    ifPlot = False  # Whether to plot the results
-    nSig = len(sigmaVals)
+    if_plot = False  # Whether to plot the results
+    n_sig = len(sigmaVals)
 
     # Automatically create scenarios with uniform conditions across electrode positions
     # We've mostly abandoned this for customized scenarios from set_scenario()
@@ -92,24 +87,24 @@ def fwd_model_4(mode):
             if os.path.exists(param_file):
                 with open(param_file, newline='') as csvfile:
                     datareader = csv.reader(csvfile, delimiter=',')
-                    survVals = np.array(next(datareader), dtype='float')
-                    electrodes['rpos'] = np.array(next(datareader), dtype=float) # Do the parsing
+                    surv_vals = np.array(next(datareader), dtype='float')
+                    electrodes['rpos'] = np.array(next(datareader), dtype=float)  # Do the parsing
                     espace = float(next(datareader)[0])
 
         else:
-            [survVals, electrodes['rpos'], espace] = s_scen.set_scenario(scenario, NELEC)
+            [surv_vals, electrodes['rpos'], espace] = s_scen.set_scenario(scenario, NELEC)
 
-        ELEC_MIDPOINT = GRID['z'][-1]/2.0 # electrode array midpoint
-        ARRAY_BASE = -(np.arange(NELEC - 1, -1, -1) * espace)
-        array_mid = (ARRAY_BASE[0] + ARRAY_BASE[-1])/2.0
+        elec_midpoint = GRID['z'][-1]/2.0  # electrode array midpoint
+        array_base = -(np.arange(NELEC - 1, -1, -1) * espace)
+        array_mid = (array_base[0] + array_base[-1])/2.0
         # electrodes['zpos'] = ELEC_BASALPOS - (np.arange(NELEC - 1, -1, -1) * espace)
 
-        electrodes['zpos'] = (ELEC_MIDPOINT - array_mid) + ARRAY_BASE
+        electrodes['zpos'] = (elec_midpoint - array_mid) + array_base
 
         if not os.path.isdir(FWDOUTPUTDIR):
             os.makedirs(FWDOUTPUTDIR)
 
-        OUTFILE = FWDOUTPUTDIR + 'FwdModelOutput_' + scenario + '.csv'
+        outfile = FWDOUTPUTDIR + 'FwdModelOutput_' + scenario + '.csv'
 
         # Additional setup
         RUN_INFO['scenario'] = scenario
@@ -123,40 +118,40 @@ def fwd_model_4(mode):
         simParams['grid'] = GRID
         simParams['run_info'] = RUN_INFO
 
-        nZ = len(GRID['z'])  # Convenience variable
-
         # Example of neural activation at threshold (variants of Goldwyn paper) ; using choices for channel, etc.
-        # made above % Keep in mind that the activation sensitivity will be FIXED, as will the number of neurons required
-        # for threshold. Therefore, the final current to achieve theshold will vary according to the simple minimization
-        # routine. Also note this works much faster when the field calculations are performed with a look-up table.
+        # made above.
+        # Keep in mind that the activation sensitivity will be FIXED, as will the number of neurons required
+        # for threshold. Therefore, the final current to achieve threshold will vary according to the simple
+        # minimization routine.
         avec = np.arange(0, 1.01, .01)  # create the neuron count to neuron spikes transformation
         rlvec = NEURONS['coef'] * (avec ** 2) + (1 - NEURONS['coef']) * avec
         rlvec = NEURONS['neur_per_clust'] * (rlvec ** NEURONS['power'])
         rlvltable = np.stack((avec, rlvec))  # start with the e-field(s) created above, but remove the current scaling
 
         # Specify which variables to vary and set up those arrays
-        thr_sim_db = np.empty((NELEC, nSig))  # Array for threshold data for different stim elecs and diff sigma values
+        thr_sim_db = np.empty((NELEC, n_sig))  # Array for threshold data for different stim elecs and diff sigma values
         thr_sim_db[:] = np.nan
 
-        # Get survival values for all 330 clusters from the 16 values at electrode
-        # positions.
-        NEURONS['nsurvival'] = surv_full.surv_full(simParams['electrodes']['zpos'], survVals, simParams['grid']['z'])
+        # Get survival values for all 330 clusters from the 16 values at electrode positions.
+        NEURONS['nsurvival'] = surv_full.surv_full(simParams['electrodes']['zpos'], surv_vals, simParams['grid']['z'])
         NEURONS['rlvl'] = rlvltable
         simParams['neurons'] = NEURONS
-        # Sanity check. Could add other sanity checks here
-        # if any(simParams.grid.r < 1):
-        # raise('Ending script. One or more evaluation points are inside cylinder; not appropriate for neural activation.')
+        #  Sanity check. Could add other sanity checks here
+        if simParams['grid']['r'] < 1:
+            raise ('Ending script. One or more evaluation points are inside cylinder;\
+             not appropriate for neural activation.')
 
         # Determine threshold for each value of sigma
-        for i in range(0, nSig):  # number of sigma values to test
+        for i in range(0, n_sig):  # number of sigma values to test
             simParams['channel']['sigma'] = sigmaVals[i]
             [thr_sim_db[:, i], neuron_vals] = gt.get_thresholds(act_vals, fp, simParams)
 
         # Write a csv file
-        with open(OUTFILE, mode='w') as data_file:
+        with open(outfile, mode='w') as data_file:
             data_writer = csv.writer(data_file, delimiter=',', quotechar='"')
             for row in range(0, NELEC):
-                data_writer.writerow([row, survVals[row], electrodes['rpos'][row], thr_sim_db[row, 0], thr_sim_db[row, 1]])
+                data_writer.writerow([row, surv_vals[row], electrodes['rpos'][row], thr_sim_db[row, 0],
+                                      thr_sim_db[row, 1]])
         data_file.close()
 
         # Save simParams
@@ -167,11 +162,11 @@ def fwd_model_4(mode):
         # Note that this is saving only the last simParams structure from the loops on sigma and in get_thresholds.
 
         # Plot the results, if desired
-        if ifPlot:
+        if if_plot:
             fig1, ax1 = plt.subplots()
             ax1.plot(np.arange(0, NELEC) + 1, thr_sim_db, marker='o')
-            titleText = 'Threshold ' + scenario
-            ax1.set(xlabel='Electrode number', ylabel='Threshold (dB)', title=titleText)
+            title_text = 'Threshold ' + scenario
+            ax1.set(xlabel='Electrode number', ylabel='Threshold (dB)', title=title_text)
 
             plt.show()
 

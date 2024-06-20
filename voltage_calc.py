@@ -56,10 +56,12 @@ def integ_func(x, m_max, pratio, rad, reval, z, theta, relec):  # This is the Be
 
 # Main parameters to vary
 radius = 1.0  # cylinder radius
-res_int = 250.0  # internal resistivity
+res_int = 70.0  # internal resistivity
 res_ext = 250.0  # external resistivityß
 
-output_filename = '16June2024_MedResolution_Rext250_Rint250.dat'
+## TODO Autmatically make the filename, to ensure that it matches the parameters
+## TODO Put the voltage tables in their own directory. [optionally]
+output_filename = '24June2024_MedResolution_Rext250_Rint70.dat'
 
 pr = cProfile.Profile()
 
@@ -95,14 +97,14 @@ fp['runOutFile'] = output_filename
 
 # Derived values
 resRatio = fp['resInt'] / fp['resExt']
-rPrime = fp['reval']
+r_prime = fp['reval']
 nZ = len(fp['zEval'])  # this may be a problem if zEval is just a scalar
 n_ypos = 3  # # of values to calculate across the y dimension for the 2nd spatial derivative
 
-rElecRange = fp['relec']
-nRElec = len(rElecRange)
-voltageVals = np. zeros((nRElec, n_ypos, nZ))
-activationVals = np.zeros((nRElec, nZ))
+relec_range = fp['relec']  # electrode radial positions
+n_relec = len(relec_range)
+voltageVals = np. zeros((n_relec, n_ypos, nZ))
+activationVals = np.zeros((n_relec, nZ))
 if_plot = False
 
 pr.enable()  # Start the profiler
@@ -113,21 +115,21 @@ yVals = np.arange(-n_yeval * y_inc, n_yeval * (y_inc * 1.01), y_inc)
 transVoltage = np.empty(n_ypos)
 
 # loop on electrode radial positions
-for i, rElec in enumerate(rElecRange):
-    # retval = integ_func(1e-12, mMax,resRatio,cylRadius,rPrime,zEval,thisTheta, rElec)
-    print('starting electrode position ', i, ' of ', len(rElecRange))
+for i, rElec in enumerate(relec_range):
+    # retval = integ_func(1e-12, mMax,resRatio,cylRadius,r_prime,zEval,thisTheta, rElec)
+    print('starting electrode position ', i, ' of ', len(relec_range))
 
     # Loop on Z position; but in this streamlined version, keep reval and theta constant
     # Evaluate only for y negative and 0 and reflect the voltage values to positive y positions, saving compute time
     for m, thisZ in enumerate(fp['zEval']):
-        frac_done = (((i*len(fp['zEval'])) + m)*100)/(len(rElecRange) * len(fp['zEval']))
+        frac_done = (((i*len(fp['zEval'])) + m)*100)/(len(relec_range) * len(fp['zEval']))
         print('# ', m, ' of ', nZ, ' z values. Approximately ', '%.2f' % frac_done, ' % complete.')
         # loop on y positions to get 2nd spatial derivative
         for j, y_val in enumerate(yVals[0:n_yeval + 1]):
             thisTheta = np.arctan(y_val / fp['reval'])
-            rPrime = np.sqrt((y_val ** 2) + (fp['reval'] ** 2))  # distance of eval point from center of cylinder
+            r_prime = np.sqrt((np.power(y_val, 2)) + (fp['reval'] ** 2))  # distance of eval pt. from center of cylinder
             [itemp, error] = integ.quad(integ_func, fp['intStart'], fp['intEnd'], epsabs=fp['ITOL'], limit=1000,
-                                        args=(fp['mMax'], resRatio, fp['cylRadius'], rPrime, thisZ, thisTheta, rElec))
+                                        args=(fp['mMax'], resRatio, fp['cylRadius'], r_prime, thisZ, thisTheta, rElec))
             tempV = itemp / (2 * (np.pi ** 2))  # From Goldwyn eqn. 11
             voltageVals[i, j, m] = tempV
             voltageVals[i, n_ypos - (j + 1), m] = tempV  # place same value in mirror-symmetric position
@@ -166,18 +168,16 @@ else:
 
 if if_plot:
     # Some plots that might be helpful
-    # plt.plot(rElecRange, voltageVals[:, 10], 'or')
-    # plt.plot(rElecRange, activationVals[:, 0], 'ob')
-    # plt.xlabel('Electrode radial position (mm)')
-    # plt.ylabel('Red: voltage; Blue: activation')
-    # plt.xlim(-1.0, 1.0)
-    # plt.yscale('log')
+    #  plt.plot(relec_range, voltageVals[:, 10], 'or')
+    #  plt.plot(relec_range, activationVals[:, 0], 'ob')
+    #  plt.xlabel('Electrode radial position (mm)')
+    #  plt.ylabel('Red: voltage; Blue: activation')
+    #  plt.xlim(-1.0, 1.0)
+    #  plt.yscale('log')
 
     plt.figure()
     plt.xlabel('y position (mm)')
     plt.ylabel('Voltage')
     plt.plot(yVals, voltageVals[0, :, 0], '.b')
     plt.plot(yVals, voltageVals[1, :, 0], '.g')
-    # plt.plot(yVals, voltageVals[2, :, 0], '.r')
-    # plt.plot(yVals, voltageVals[3, :, 0], '.k')
     plt.show()

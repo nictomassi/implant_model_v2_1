@@ -87,8 +87,8 @@ def fwd_model_2D(mode):
     nRpos = len(rposVals)
 
     # set up filename
-    descrip = "surv_" + str(np.min(survVals)) + "_" + str(np.max(survVals)) + "_rpos_" +\
-              str(np.min(rposVals)) + "_" + str(np.max(rposVals)) + hires
+    descrip = 'surv_%.2f' % np.min(survVals) + '_%.2f' % np.max(survVals) + "_rpos_%.2f" %\
+              np.min(rposVals) + '_%.2f' % np.max(rposVals) + hires
 
     if not os.path.isdir(FWDOUTPUTDIR):
         os.mkdir(FWDOUTPUTDIR)
