@@ -58,10 +58,15 @@ def integ_func(x, m_max, pratio, rad, reval, z, theta, relec):  # This is the Be
 radius = 1.0  # cylinder radius
 res_int = 70.0  # internal resistivity
 res_ext = 250.0  # external resistivityß
+vtable_dir = 'v_tables/'
 
 ## TODO Autmatically make the filename, to ensure that it matches the parameters
 ## TODO Put the voltage tables in their own directory. [optionally]
-output_filename = '24June2024_MedResolution_Rext250_Rint70.dat'
+date = '24June2024'
+resol = '_MedResolution_'
+rext_text = 'Rext' + str(round(res_ext))
+r_int_text = '_Rint' + str(round(res_int)) + '.dat'
+output_filename = vtable_dir + date + resol + rext_text + r_int_text
 
 pr = cProfile.Profile()
 

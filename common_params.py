@@ -101,6 +101,7 @@ FWD_OUT_PRFIX = 'FWD_OUTPUT/'
 FWDOUTPUTDIR = FWD_OUT_PRFIX + new_dir_suffix
 INV_OUT_PRFIX = 'INV_OUTPUT/'
 INVOUTPUTDIR = INV_OUT_PRFIX + new_dir_suffix
+vtable_dir = 'v_tables/'
 
 if R_TEXT == 'R70':
     FIELDTABLE = '16May2024_MedResolution_Rext70_nonans.dat'
@@ -120,3 +121,5 @@ elif R_TEXT == 'R125O':
     FIELDTABLE = '28Dec2023_MedResolution_Rext1250.dat'
 elif R_TEXT == 'R2500':
     FIELDTABLE = '7Dec2023_MedResolution_Rext2500_nonans.dat'
+
+FIELDTABLE = vtable_dir + FIELDTABLE

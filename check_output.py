@@ -89,6 +89,7 @@ for espace in [0.85, 1.1]:
     ref_file = FWD_OUT_PRFIX + ref + new_dir_suffix + file
     test_file = FWDOUTPUTDIR + file
 
+    print('Checking 2D forward model...')
     max_diff = max_frac_diff(ref_file, test_file)
     if max_diff > stringency:
         print('ALERT! Detected a percentage difference of: ', max_diff * 100, '%')

@@ -27,10 +27,10 @@ import fig3_neuron_activation
 
 def fwd_model_2D(mode):
 
-    # TODO:  should loop on espace values
+    # TODO:  should loop on espace values. Looping could then be removed from the param_survey script
     if mode == 'main':
-        # espace = 0.85
-        espace = 1.1
+        espace = 0.85
+        # espace = 1.1
 
         pass  # proceed as normal
     elif mode == 'survey':
@@ -45,7 +45,7 @@ def fwd_model_2D(mode):
                     # Do the parsing
                     tempdata[i] = row[0]
 
-        res_ext = tempdata[0]
+        #  res_ext = tempdata[0]  # this variable is not used in this context.
         NEURONS['act_stdrel'] = tempdata[1]
         NEURONS['thrtarg'] = tempdata[2]
         espace = tempdata[3]
@@ -60,12 +60,12 @@ def fwd_model_2D(mode):
 
     # Unpack data from the field data file
     fp = data[0]
-    vVals = data[1]
-    actVals = data[2]
+    #  vVals = data[1]  # Voltage values are loaded from the file but are not needed
+    act_vals = data[2]
     # Convert zEval to a numpy array
     fp['zEval'] = np.array(fp['zEval'])
 
-    GRID['table'] = actVals
+    GRID['table'] = act_vals
 
     COCHLEA['res1'] = fp['resInt'] * np.ones(NELEC)  # Note these valus do not match thos of Goldwyn et al., 2010
     COCHLEA['res2'] = fp['resExt'] * np.ones(NELEC)  # resistivities are in Ohm*cm (conversion to Ohm*mm occurs later)
@@ -78,8 +78,7 @@ def fwd_model_2D(mode):
     # SIDELOBE = 1
     ################################
 
-    ifPlot = False  # Whether to plot the results
-    ifPlotContours = False
+    if_plot = False  # Whether to plot the results
     survVals = np.arange(0.04, 0.97, 0.02)
     rposVals = np.arange(-0.95, 0.96, 0.02)
     hires = '_hi_res'
@@ -101,16 +100,16 @@ def fwd_model_2D(mode):
         e_txt = 'xxx'
     es_text = '_espace_' + e_txt
 
-    OUTFILE = FWDOUTPUTDIR + 'FwdModelOutput_' + descrip + es_text + '.csv'
+    outfile = FWDOUTPUTDIR + 'FwdModelOutput_' + descrip + es_text + '.csv'
 
     # Additional setup
     COCHLEA['timestamp'] = datetime.datetime.now()
     electrodes['timestamp'] = datetime.datetime.now()
     electrodes['rpos'] = np.zeros(NELEC)
     ELEC_MIDPOINT = GRID['z'][-1] / 2.0  # electrode array midpoint
-    ARRAY_BASE = -(np.arange(NELEC - 1, -1, -1) * espace)
-    array_mid = (ARRAY_BASE[0] + ARRAY_BASE[-1]) / 2.0
-    electrodes['zpos'] = (ELEC_MIDPOINT - array_mid) + ARRAY_BASE
+    array_base = -(np.arange(NELEC - 1, -1, -1) * espace)
+    array_mid = (array_base[0] + array_base[-1]) / 2.0
+    electrodes['zpos'] = (ELEC_MIDPOINT - array_mid) + array_base
 
     # electrodes['zpos'] = ELEC_BASALPOS - (np.arange(NELEC - 1, -1, -1) * espace)
     CHANNEL['timestamp'] = datetime.datetime.now()
@@ -122,10 +121,7 @@ def fwd_model_2D(mode):
     simParams['channel'] = CHANNEL
     simParams['grid'] = GRID
 
-    # Convenience variables
-    nZ = len(GRID['z'])
-
-    # Example of neural activation at threshold (variants of Goldwyn paper) ; using choices for channel, etc,
+    # Example of neural activation at threshold (variants of Goldwyn paper) ; using choices for channel, etc.,
     # made above. Keep in mind that the activation sensitivity will be FIXED, as will the number of neurons required
     # for threshold. Therefore, the final current to achieve theshold will vary according to the simple minimization
     # routine. Also note this works much faster when the field calculations are performed with a look-up table.
@@ -134,14 +130,13 @@ def fwd_model_2D(mode):
     rlvec = NEURONS['neur_per_clust'] * (rlvec ** NEURONS['power'])
     rlvltable = np.stack((avec, rlvec))  # start with the e-field(s) created above, but remove the current scaling
 
-    nSig = len(sigmaVals)
-    thr_sim_db = np.empty((nSurv, nRpos, nSig))  # Array for threshold data for different stim elecs and diff sigma values
+    n_sig = len(sigmaVals)
+    thr_sim_db = np.empty((nSurv, nRpos, n_sig))  # Array for threshold data for different elecs and sigma values
     thr_sim_db[:] = np.nan
-    neuronact = np.empty((nSurv, nRpos, nSig, 1, len(GRID['z'])))  # Only 1 electrode in this model
+    neuronact = np.empty((nSurv, nRpos, n_sig, 1, len(GRID['z'])))  # Only 1 electrode in this model
     neuronact[:] = np.nan
-    # n_sols = np.zeros((nSurv, nRpos), dtype=int)
 
-    # Get survival values for all 330 clusters from the 16 values at electrode positions.
+    # Get survival values for all neuron clusters from the 16 values at electrode positions.
     simParams['neurons']['rlvl'] = rlvltable
 
     # Sanity check. Could add other sanity checks here
@@ -158,9 +153,9 @@ def fwd_model_2D(mode):
         for k, rpos in enumerate(rposVals):
             simParams['electrodes']['rpos'] = rpos
 
-            for i in range(0, nSig):  # number of sigma values to test
+            for i in range(0, n_sig):  # number of sigma values to test
                 simParams['channel']['sigma'] = sigmaVals[i]
-                tempvals = gt.get_thresholds(actVals, fp, simParams)
+                tempvals = gt.get_thresholds(act_vals, fp, simParams)
                 thr_sim_db[j, k, i] = tempvals[0].item()
                 nexttemp2 = tempvals[1]
                 if np.max(nexttemp2) == 0:
@@ -174,7 +169,7 @@ def fwd_model_2D(mode):
     for i, rpos in enumerate(rposVals):
         header2 += str(rpos) + ', '
 
-    with open(OUTFILE, mode='w') as data_file:
+    with open(outfile, mode='w') as data_file:
         data_writer = csv.writer(data_file, delimiter=',', quotechar='"')
         data_writer.writerow(header1)
         data_writer.writerow(header2)
@@ -197,7 +192,7 @@ def fwd_model_2D(mode):
         pickle.dump(simParams, f, pickle.HIGHEST_PROTOCOL)
         f.close()
     print('saved: ', spname)
-    # Note that this is saving only the last simParams structure from the loops on sigma and in getThresholds.
+    # Note that this is saving only the last simParams structure from the loops on sigma and in get_thresholds.
 
     # display min and max threshold values
     print('min MP thr:  ', np.min(thr_sim_db[:, :, 0]))
@@ -206,12 +201,10 @@ def fwd_model_2D(mode):
     print('max TP thr:  ', np.max(thr_sim_db[:, :, 1]))
 
     # Save neuron activation data into a binary file
-    temp0 = [(survVals, rposVals)]
-    temp1 = [temp0, neuronact]
     np.savez(FWDOUTPUTDIR + 'neuronact_' + STD_TEXT + es_text, survVals, rposVals, neuronact)
 
     # Plot the results
-    if ifPlot:
+    if if_plot:
         figs4_5_2D_contour.fig_2D_contour()
         fig3_neuron_activation.fig3_neuron_activation()
         plt.show()
