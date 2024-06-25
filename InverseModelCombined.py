@@ -44,38 +44,6 @@ if_save_npy = True
 
 
 # For optimizing fit to thresholds need e_field, sim_params, sigvals
-# This is for a single electrode
-# def objectivefunc_lmfit(p, sigvals, sim_params, f_par, e_field, thr_goals, this_elec):
-#     nel = len(sim_params['electrodes']['zpos'])
-#     vals = p.valuesdict()
-#     show_retval = False
-#
-#     sim_params['electrodes']['rpos'] = vals['rpos_val']
-#     tempsurv = np.zeros(nel)
-#     tempsurv[:] = vals['surv_val']
-#     print('tempsurv = ', tempsurv)
-#
-#     sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
-#                                                              tempsurv, simParams['grid']['z'])
-#
-#     # Call for monopolar then tripolar
-#     sim_params['channel']['sigma'] = sigvals[0]
-#     thresh_mp = gt.get_thresholds(e_field, f_par, sim_params)
-#     sim_params['channel']['sigma'] = sigvals[1]
-#     thresh_tp = gt.get_thresholds(e_field, f_par, sim_params)
-#     mp_err = np.abs(thresh_mp[0] - thr_goals['thrmp_db'][this_elec])
-#     tp_err = np.abs(thresh_tp[0] - thr_goals['thrtp_db'][this_elec])
-#     if np.isnan(tp_err):
-#         tp_err = 0.0
-#     mean_error = (mp_err + tp_err) / 2.0
-#     if show_retval:
-#         print('Mean error (dB) = ', mean_error)
-#
-#     retval = [mp_err, tp_err]
-#     return retval
-#
-
-# For optimizing fit to thresholds need e_field, sim_params, sigvals
 # This is for all electrodes at once
 def objectivefunc_lmfit_all(par, sigvals, sim_params, f_par, e_field, thr_goals):
     # Repack parameters into arrays
@@ -85,21 +53,21 @@ def objectivefunc_lmfit_all(par, sigvals, sim_params, f_par, e_field, thr_goals)
 
     sim_params['electrodes']['rpos'] = np.zeros(nel)
     if not tp_extend:
-        for i in range(0, nel-2):
+        for i in range(0, nel - 2):
             varname = 'v_%i' % i
             myvalue = vals[varname]
-            sim_params['electrodes']['rpos'][i+1] = myvalue
+            sim_params['electrodes']['rpos'][i + 1] = myvalue
             sim_params['electrodes']['rpos'][0] = sim_params['electrodes']['rpos'][1]
             sim_params['electrodes']['rpos'][-1] = sim_params['electrodes']['rpos'][-2]
 
-            tempsurv = np.zeros(nel-2)
+            tempsurv = np.zeros(nel - 2)
             tempsurv2 = np.zeros(nel)
-            for i, loopval in enumerate(range(nel-2, 2 * (nel-2))):
-                varname = 'v_%i' % (i + nel-2)
+            for j, loopval in enumerate(range(nel - 2, 2 * (nel - 2))):
+                varname = 'v_%i' % (j + nel - 2)
                 # print('i: ', i, ' loopval: ', loopval, ' varname: ', varname)
                 myvalue = vals[varname]
-                tempsurv[i] = myvalue
-            tempsurv2[1:nel-1] = tempsurv
+                tempsurv[j] = myvalue
+            tempsurv2[1:nel - 1] = tempsurv
             tempsurv2[0] = tempsurv2[1]
             tempsurv2[-1] = tempsurv2[-2]
 
@@ -187,7 +155,7 @@ def objectivefunc_minimize_all(par, sigvals, sim_params, f_par, e_field, thr_goa
     return mean_error
 
 
-def max_diff_adjacent(x, pars):
+def max_diff_adjacent(pars):
     # pars 0-15 are for distance
     diff = np.diff(pars[0:16])
     abs_diff = np.abs(diff)
@@ -273,7 +241,8 @@ def inverse_model_combined(mode):  # Start this script
     # Now hold these data until about to fit a particular combination of monopolar and tripolar threshold values
     # to see if there is more than one solution
 
-    surv_grid_vals = np.arange(0.04, 0.97, 0.02)  # TODO should read these from the file, not have the range hard coded here
+    surv_grid_vals = np.arange(0.04, 0.97, 0.02)
+    # TODO should read these from the file, not have the range hard coded here
     rpos_grid_vals = np.arange(-0.95, 0.96, 0.02)
 
     n_elec_pos = 0
@@ -367,7 +336,6 @@ def inverse_model_combined(mode):  # Start this script
             thr_data['thrtp_db'] = np.insert(thr_data['thrtp_db'], 0, np.NaN)  # put NaNs at ends of array
             thr_data['thrtp_db'] = np.append(thr_data['thrtp_db'], np.NaN)
 
-
             # Calculate offset to get closer to what the model can produce
             mp_offset_db = np.nanmean(thr_data['thrmp_db']) - np.nanmean(mono_thr)
             tp_offset_db = np.nanmean(thr_data['thrtp_db']) - np.nanmean(tripol_thr)
@@ -416,7 +384,6 @@ def inverse_model_combined(mode):  # Start this script
         fitrposvals = np.zeros(NELEC)
         fitsurvvals = np.zeros(NELEC)
         par = Parameters()
-        par._asteval.symtable['max_diff_adjacent'] = max_diff_adjacent
         initvec = []
 
         if fit_mode == 'combined':  # Optimize survival and rpos to match MP and TP thresholds
@@ -488,7 +455,6 @@ def inverse_model_combined(mode):  # Start this script
                     print('electrode: ', i, ";  no solutions. Closest: ", mp_idx, ' and ', tp_idx,
                           ' , OVERRIDING to: (position, survival): ', rp_guess, sv_guess)
 
-
                 elif nsols[i] == 1:  # unique solution
                     print('electrode: ', i, ';  one solution: ', x, y)
                     rp_guess = x
@@ -556,7 +522,7 @@ def inverse_model_combined(mode):  # Start this script
                     elif NELEC - 2 <= i < 2 * (NELEC - 2):
                         lb = 0.0  # density
                         ub = 1.0
-                    else:  ## TODO leftover from tryng to fit external resistivity. Can remove
+                    else:  # TODO leftover from tryng to fit external resistivity. Can remove
                         lb = 125
                         ub = 2500
 
@@ -574,9 +540,6 @@ def inverse_model_combined(mode):  # Start this script
                     elif NELEC <= i < 2 * NELEC:
                         lb = 0.0  # density
                         ub = 1.0
-                    else:  ## TODO leftover from tryng to fit external resistivity. Can remove
-                        lb = 125
-                        ub = 2500
 
                     par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
 
@@ -603,9 +566,6 @@ def inverse_model_combined(mode):  # Start this script
                     ub = 0.9
                 par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
 
-        # Constraint on maximum change of electrode position for adjacent electrodes
-        #         par.add('max_adj', expr=max_diff_adjacent(x, par), max=0.5)
-
         if use_minimizer:  # Now do the main fitting for all electrodes at once
             minner = Minimizer(objectivefunc_lmfit_all, par, nan_policy='omit',
                                fcn_args=(sigmaVals, simParams, fp, act_vals, thr_data))
@@ -617,11 +577,11 @@ def inverse_model_combined(mode):  # Start this script
                 result = minner.minimize(method='least_squares', ftol=fit_tol, diff_step=0.1)
 
             if not tp_extend:  # store the results in the right place
-                for i in range(NELEC-2):
+                for i in range(NELEC - 2):
                     vname = 'v_%i' % i
-                    fitrposvals[i+1] = result.params[vname]
+                    fitrposvals[i + 1] = result.params[vname]
                     vname = 'v_%i' % (i + NELEC - 2)
-                    fitsurvvals[i+1] = result.params[vname]
+                    fitsurvvals[i + 1] = result.params[vname]
 
                 fitrposvals[0] = fitrposvals[1]
                 fitrposvals[-1] = fitrposvals[-2]
@@ -634,7 +594,6 @@ def inverse_model_combined(mode):  # Start this script
                     fitrposvals[i] = result.params[vname]
                     vname = 'v_%i' % (i + NELEC)
                     fitsurvvals[i] = result.params[vname]
-
 
         else:  # use standard scipy.minimize
             bnds = ((-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9),
@@ -671,7 +630,9 @@ def inverse_model_combined(mode):  # Start this script
         simParams['channel']['sigma'] = sigmaVals[1]
         thrsimtp = gt.get_thresholds(act_vals, fp, simParams)
 
-        errvals = np.abs(np.subtract(thrsimmp[0], thr_data['thrmp_db'])), np.abs(np.subtract(thrsimtp[0][1:NELEC - 1], thr_data['thrtp_db'][1:NELEC - 1]))
+        errvals = np.abs(np.subtract(thrsimmp[0], thr_data['thrmp_db'])), np.abs(np.subtract(thrsimtp[0][1:NELEC - 1],
+                                                                                             thr_data['thrtp_db'][
+                                                                                             1:NELEC - 1]))
         thrsim = [thrsimmp[0]], [thrsimtp[0]]
         thrtargs = [[thr_data['thrmp_db']], [thr_data['thrtp_db']]]
 
@@ -770,15 +731,15 @@ def inverse_model_combined(mode):  # Start this script
                 else:
                     t8 = np.NaN
                 t9 = fitsurvvals[row]
-                if row == 0 or row == NELEC-1:
+                if row == 0 or row == NELEC - 1:
                     t10 = np.nan
                 else:
-                    t10 = rposerrs[row-1]  # with tp_extend, only has 14 values
+                    t10 = rposerrs[row - 1]  # with tp_extend, only has 14 values
                 if use_fwd_model:
                     if row == 0 or row == NELEC - 1:
                         t11 = np.nan
                     else:
-                        t11 = survivalerrs[row-1]
+                        t11 = survivalerrs[row - 1]
                 else:
                     t11 = np.NaN
 
@@ -877,4 +838,4 @@ def inverse_model_combined(mode):  # Start this script
 
 
 if __name__ == '__main__':
-    inverse_model_combined(mode = 'main')  # main or 'survey'
+    inverse_model_combined(mode='main')  # main or 'survey'
