@@ -47,7 +47,7 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised):
     if use_fwd_model:
         title_text = 'Known scenario thresholds: ' + this_case + '; mean thr error (dB): ' + '%.2f' % mean_thr_err
     else:
-        title_text = ('Subject thresholds: ' + this_case + ' ' + R_TEXT + ' ' + TARG_TEXT +
+        title_text = ('Subject thresholds: ' + this_case + ' ' + RE_TEXT + ' ' + RI_TEXT + ' ' + TARG_TEXT +
                       '; mean thr error (dB): ' + '%.2f' % mean_thr_err)
     axs[0].set(xlabel='Electrode number', ylabel=yl, title=title_text)
     axs[0].set_xlim(0, 17)

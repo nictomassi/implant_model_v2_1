@@ -54,7 +54,7 @@ def fwd_model_4(mode):
     COCHLEA['res2'] = fp['resExt'] * np.ones(NELEC)  # resistivities are in Ohm*cm (conversion to Ohm*mm occurs later)
     GRID['r'] = fp['rspace']  # only 1 of the 3 cylindrical dimensions can be a vector (for CYLINDER3D_MAKEPROFILE)
 
-    if_plot = False  # Whether to plot the results
+    if_plot = True  # Whether to plot the results
     n_sig = len(sigmaVals)
 
     # Automatically create scenarios with uniform conditions across electrode positions

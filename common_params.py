@@ -7,8 +7,10 @@ NELEC = 16
 # ELEC_BASALPOS = 26.25  # in mm ** removed this 20 May 2024 to make sure electrode array is centered in neurons
 
 # Neural activation parameters
-R_EXT = 250.0   # ohm-cm
-R_TEXT = 'R' + str(round(R_EXT))
+R_EXT = 70.0   # ohm-cm
+RE_TEXT = 'RE' + str(round(R_EXT))
+R_INT = 70.0  # ohm-cm
+RI_TEXT = 'RI' + str(round(R_INT))
 THRTARG = 100.0
 TARG_TEXT = '_TARG' + str(round(THRTARG)) + '/'
 ACTR = 100.0
@@ -95,7 +97,7 @@ scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S42', 'S43']
 # scenarios = ['A014L']
 # File locations
 FWD_OUT_PRFIX = 'FWD_OUTPUT/'
-new_dir_suffix = 'R%d' % R_EXT + '_' + 'std_%.1f' % ACT_STDREL + '_thr_%d' % THRTARG + '/'
+new_dir_suffix = RE_TEXT + '_' + RI_TEXT + 'std_%.1f' % ACT_STDREL + '_thr_%d' % THRTARG + '/'
 # offset = len(cp.FWD_OUT_PRFIX)
 FWD_OUT_PRFIX = 'FWD_OUTPUT/'
 FWDOUTPUTDIR = FWD_OUT_PRFIX + new_dir_suffix
@@ -103,23 +105,26 @@ INV_OUT_PRFIX = 'INV_OUTPUT/'
 INVOUTPUTDIR = INV_OUT_PRFIX + new_dir_suffix
 vtable_dir = 'v_tables/'
 
-if R_TEXT == 'R70':
+if RE_TEXT == 'RE70':
     FIELDTABLE = '16May2024_MedResolution_Rext70_nonans.dat'
-elif R_TEXT == 'R125':
+elif RE_TEXT == 'RE125':
     FIELDTABLE = '3June2024_MedResolution_Rext125_nonans.dat'
-elif R_TEXT == 'R250':
-    FIELDTABLE = '18May2024_MedResolution_Rext250_nonans.dat'
-elif R_TEXT == 'R375':
+elif RE_TEXT == 'RE250':
+    if RI_TEXT == 'RI70':
+        FIELDTABLE = '18May2024_MedResolution_Rext250_nonans.dat'
+    elif RI_TEXT == 'RI250':
+        FIELDTABLE = '16June2024_MedResolution_Rext250_Rint250_nonans.dat'
+elif RE_TEXT == 'RE375':
     FIELDTABLE = '18May2024_MedResolution_Rext375.dat'
-elif R_TEXT == 'R500':
+elif RE_TEXT == 'RE500':
     FIELDTABLE = '3June2024_MedResolution_Rext500.dat'
-elif R_TEXT == 'R750':
+elif RE_TEXT == 'RE750':
     FIELDTABLE = '18Jan2024_MedResolution_Rext750_nonans.dat'
-elif R_TEXT == 'R1000':
+elif RE_TEXT == 'RE1000':
     FIELDTABLE = '3June2024_MedResolution_Rext1000_nonans.dat'
-elif R_TEXT == 'R125O':
+elif RE_TEXT == 'RE125O':
     FIELDTABLE = '28Dec2023_MedResolution_Rext1250.dat'
-elif R_TEXT == 'R2500':
+elif RE_TEXT == 'RE2500':
     FIELDTABLE = '7Dec2023_MedResolution_Rext2500_nonans.dat'
 
 FIELDTABLE = vtable_dir + FIELDTABLE
