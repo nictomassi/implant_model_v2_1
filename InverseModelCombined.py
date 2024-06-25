@@ -118,8 +118,6 @@ def objectivefunc_lmfit_all(par, sigvals, sim_params, f_par, e_field, thr_goals)
             tempsurv[0] = tempsurv[1]
             tempsurv[-1] = tempsurv[-2]
 
-    # sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
-    #                                          tempsurv, simParams['grid']['z'])
     sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
                                                              tempsurv2, simParams['grid']['z'])
 
@@ -609,21 +607,14 @@ def inverse_model_combined(mode):  # Start this script
         #         par.add('max_adj', expr=max_diff_adjacent(x, par), max=0.5)
 
         if use_minimizer:  # Now do the main fitting for all electrodes at once
-            # minner = Minimizer(objectivefunc_lmfit_all, par, diff_step=0.02, nan_policy='omit',
-            #                    fcn_args=(sigmaVals, simParams, fp, act_vals, thr_data))
-            print('starting minimization. Std and targ are: ', ACT_STDREL, ' and ', THRTARG)
             minner = Minimizer(objectivefunc_lmfit_all, par, nan_policy='omit',
                                fcn_args=(sigmaVals, simParams, fp, act_vals, thr_data))
 
             if use_fwd_model:
-                # result = minner.minimize(method='least-squares', options={'ftol': fit_tol, 'diff_step': 0.02})
                 result = minner.minimize(method='least_squares', ftol=fit_tol, diff_step=0.1)
-                # result = minner.minimize(method='Nelder-Mead', options={"fatol": fit_tol})
 
-                #  result = minner.minimize(method='leastsq')
             else:  # use CT data
                 result = minner.minimize(method='least_squares', ftol=fit_tol, diff_step=0.1)
-                # result = minner.minimize(method='Nelder-Mead', options={'fatol': fit_tol})
 
             if not tp_extend:  # store the results in the right place
                 for i in range(NELEC-2):
@@ -646,22 +637,12 @@ def inverse_model_combined(mode):  # Start this script
 
 
         else:  # use standard scipy.minimize
-            # initvec[0:NELEC] = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
-            #                     0.01, 0.01, 0.01]
-            # initvec[NELEC:] = [0.76, 0.85, 0.66, 0.35, 0.41, 0.68, 0.88, 0.76, 0.83, 0.66, 0.38, 0.41, 0.58, 0.78,
-            #                    0.82, 0.78]
             bnds = ((-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9),
                     (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9),
                     (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (-0.9, 0.9), (0.05, 0.95), (0.05, 0.95),
                     (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95),
                     (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95),
                     (0.05, 0.95), (0.05, 0.95))
-            # bnds = ((-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85),
-            #         (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85),
-            #         (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (-0.85, 0.85), (0.05, 0.95), (0.05, 0.95),
-            #         (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95),
-            #         (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95), (0.05, 0.95),
-            #         (0.05, 0.95), (0.05, 0.95))
 
             result = opt.minimize(objectivefunc_minimize_all, initvec, args=(sigmaVals, simParams, fp, act_vals,
                                                                              thr_data), method='SLSQP', jac=None,
@@ -675,7 +656,6 @@ def inverse_model_combined(mode):  # Start this script
         simParams['electrodes']['rpos'] = fitrposvals
 
         # report last fit
-        print('line 655. espace = ', espace)
         if use_minimizer:
             report_fit(result)
             result.params.pretty_print()
@@ -751,17 +731,11 @@ def inverse_model_combined(mode):  # Start this script
                     rpos_err_summary[scen] = rpos_err_metric
                     [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(1 - rposvals, 1 - fitrposvals)
 
-                # rposerrs = np.abs(np.subtract(fitrposvals, ct_vals))
-                # rpos_err_metric = np.mean(np.abs(rposerrs))
-                # rpos_summary.append([fitrposvals, ct_vals])
-                # rpos_err_summary[scen] = rpos_err_metric
-                # [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(1 - ct_vals, 1 - fitrposvals)
             else:
                 rposerrs = np.empty(NELEC)
                 rpos_err_metric = np.NAN
                 rpos_err_summary[scen] = np.NAN
 
-            ##
             # Save values in CSV format
             save_file_name = INVOUTPUTDIR + subject + '_fitResults_' + 'combined.csv'
 
@@ -851,8 +825,8 @@ def inverse_model_combined(mode):  # Start this script
     s = io.StringIO()
     sortby = SortKey.CUMULATIVE
     ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    # ps.print_stats(10)
-    # print(s.getvalue())
+    ps.print_stats(10)
+    print(s.getvalue())
 
     print('Completed inverse model on ', num_scen, ' scenarios in total time (s) of: ', ps.total_tt)
 
