@@ -29,8 +29,8 @@ def fwd_model_2D(mode):
 
     # TODO:  should loop on espace values. Looping could then be removed from the param_survey script
     if mode == 'main':
-        espace = 0.85
-        # espace = 1.1
+        # espace = 0.85
+        espace = 1.1
 
         pass  # proceed as normal
     elif mode == 'survey':
