@@ -34,7 +34,7 @@ import plot_inverse_results
 from common_params import *  # import common values across all models
 
 # User adjustable parameters
-fit_mode = 'combined'  # Which variable(s) to fit? Alternatives are 'combined', 'rpos' or 'survival'
+fit_mode = 'survival'  # Which variable(s) to fit? Alternatives are 'combined', 'rpos' or 'survival'
 ifPlot = True  # Whether to plot output at end
 unsupervised = True  # Makes & saves summary plots but does not display them and wait for user input before proceeding
 ifPlotGuessContours = False  # Option to plot initial guesses for parameters given to the fitting algorithm
@@ -546,25 +546,57 @@ def inverse_model_combined(mode):  # Start this script
             # end block for single electrode fits during the combined fit
 
         elif fit_mode == 'rpos':  # fit rpos only; hold survival fixed as the values loaded from the scenario
-            initvec = np.append(np.zeros(NELEC), survvals)
-            for i, val in enumerate(initvec):
-                if i < 16:
-                    lb = -0.85  # lower and upper bounds
-                    ub = 0.85
-                    par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
-                else:
-                    par.add('v_%i' % i, value=initvec[i], vary=False)
+            if use_minimizer == True:
+                initvec = np.append(fitrposvals[1:-1], fitsurvvals[1:-1])  ## this line needs attention
+                for i, val in enumerate(initvec):  # place values in to the par object
+                    if i < NELEC - 2:
+                        lb = -0.95  # lower and upper bounds for position
+                        ub = 0.95
+                    elif NELEC - 2 <= i < 2 * (NELEC - 2):
+                        lb = 0.0  # density
+                        ub = 1.0
+                    else:  # TODO leftover from tryng to fit external resistivity. Can remove
+                        lb = 125
+                        ub = 2500
 
-        elif fit_mode == 'survival':
-            initvec = np.append(rposvals, (np.ones(NELEC) * 0.5))
-            for i, val in enumerate(initvec):
-                if i < 16:
-                    lb = rposvals[i] - 0.01  # lower and upper bounds
-                    ub = rposvals[i] + 0.01
+                    par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
+
+                # end block for single electrode fits during the combined fit
+
+            else:
+                initvec = np.append(np.zeros(NELEC), survvals)
+                for i, val in enumerate(initvec):
+                    if i < 16:
+                        lb = -0.85  # lower and upper bounds
+                        ub = 0.85
+                        par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
+                    else:
+                        par.add('v_%i' % i, value=initvec[i], vary=False)
+
+        elif fit_mode == 'survival':  ## TODO handle tp_extend if needed
+            rposvals = subject_data.subj_ct_data(subject)
+            if not tp_extend:
+                initvec = np.append(rposvals[1:-1], (np.ones(NELEC-2) * 0.5))
+                if use_minimizer == True:
+                    for i, val in enumerate(initvec):  # place values in to the par object
+                        if i < NELEC - 2:
+                            lb = initvec[i] - 0.01  # lower and upper bounds for position
+                            ub = initvec[i] + 0.01
+                        elif NELEC - 2 <= i < 2 * (NELEC - 2):
+                            lb = 0.0  # density
+                            ub = 1.0
+
+                        par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
                 else:
-                    lb = 0.1
-                    ub = 0.9
-                par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
+                    # end block for single electrode fits during the combined fit
+                    for i, val in enumerate(initvec):
+                        if i < 16:
+                            lb = rposvals[i] - 0.01  # lower and upper bounds
+                            ub = rposvals[i] + 0.01
+                        else:
+                            lb = 0.1
+                            ub = 1.0
+                        par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
 
         if use_minimizer:  # Now do the main fitting for all electrodes at once
             minner = Minimizer(objectivefunc_lmfit_all, par, nan_policy='omit',

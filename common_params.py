@@ -7,7 +7,7 @@ NELEC = 16
 # ELEC_BASALPOS = 26.25  # in mm ** removed this 20 May 2024 to make sure electrode array is centered in neurons
 
 # Neural activation parameters
-R_EXT = 70.0   # ohm-cm
+R_EXT = 250.0   # ohm-cm
 RE_TEXT = 'RE' + str(round(R_EXT))
 R_INT = 70.0  # ohm-cm
 RI_TEXT = 'RI' + str(round(R_INT))
@@ -45,10 +45,10 @@ ct_uncertainty = 0.1  # uncertainty for CT values in case one wants to display i
 
 # NOTE!!
 # scenario names beginning with 'A' or 'S' and followed by 2 numerals are considered subjects
-# other scenario names are considered to be synthetice and for use with the forward model
+# other scenario names are considered to be synthetic and for use with the forward model
 
 global tp_extend
-tp_extend = False  # Whether to fit postion and density and end electrodes
+tp_extend = False  # Whether to fit position and density at end electrodes
 
 # Not used by the 2D exploration tool. These are left in for convenience
 global scenarios
@@ -84,10 +84,10 @@ global scenarios
 # scenarios = ['S22']  # paper "good fit" examples. Figure 7
 # scenarios = ['S29', 'S56']  # paper "poor fit" examples. Figure 8
 # scenarios = ['A002R', 'A005L', 'A014L', 'A022L', 'A022R', 'A023R', 'A024L']
-# scenarios = ['S43']
+scenarios = ['S42']
 # all subjects with CT data
 # scenarios = ['RampRposSGradual80', 'S22']
-scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S42', 'S43']
+# scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S42', 'S43']
 # scenarios = ['RampRposSGradual80']
 
 # scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S22', 'S27', 'S29', 'S38', 'S40', 'S41', 'S42',
@@ -111,7 +111,7 @@ elif RE_TEXT == 'RE125':
     FIELDTABLE = '3June2024_MedResolution_Rext125_nonans.dat'
 elif RE_TEXT == 'RE250':
     if RI_TEXT == 'RI70':
-        FIELDTABLE = '18May2024_MedResolution_Rext250_nonans.dat'
+        FIELDTABLE = '24June2024_MedResolution_Rext250_Rint70_nonans.dat'
     elif RI_TEXT == 'RI250':
         FIELDTABLE = '16June2024_MedResolution_Rext250_Rint250_nonans.dat'
 elif RE_TEXT == 'RE375':

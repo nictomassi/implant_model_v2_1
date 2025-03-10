@@ -12,6 +12,7 @@ new version in 1.4 branch 19 May 2024. No substantive changes to this file
 # Import dependencies
 import cProfile
 import io
+import os
 import pickle
 import pstats
 from datetime import datetime
@@ -57,11 +58,11 @@ def integ_func(x, m_max, pratio, rad, reval, z, theta, relec):  # This is the Be
 # Main parameters to vary
 radius = 1.0  # cylinder radius
 res_int = 70.0  # internal resistivity
-res_ext = 250.0  # external resistivityß
+res_ext = 250.0  # external resistivity
 vtable_dir = 'v_tables/'
+if not os.path.exists(vtable_dir):
+    os.makedirs(vtable_dir)
 
-## TODO Autmatically make the filename, to ensure that it matches the parameters
-## TODO Put the voltage tables in their own directory. [optionally]
 date = '24June2024'
 resol = '_MedResolution_'
 rext_text = 'Rext' + str(round(res_ext))
