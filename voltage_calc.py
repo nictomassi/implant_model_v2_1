@@ -63,7 +63,7 @@ vtable_dir = 'v_tables/'
 if not os.path.exists(vtable_dir):
     os.makedirs(vtable_dir)
 
-date = '24June2024'
+date = '11March2025'
 resol = '_MedResolution_'
 rext_text = 'Rext' + str(round(res_ext))
 r_int_text = '_Rint' + str(round(res_int)) + '.dat'
@@ -84,7 +84,7 @@ fp = {'model': 'cylinder_3d', 'fieldtype': 'Voltage_Activation', 'evaltype': 'SG
       #              22.0, 24.0, 26.0, 28.0, 30.0, 32.0, 34.0, 36.0, 38.0, 40.0),
       # Medium resolution
       'zEval': (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2,
-                1.4, 1.6, 1.8, 2.0, 2.4, 2.8, 3.2, 3.6, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0,
+              1.4, 1.6, 1.8, 2.0, 2.4, 2.8, 3.2, 3.6, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0,
                 8.5, 9.0, 9.5, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 24.0, 26.0, 28.0, 30.0,
                 32.0, 34.0, 36.0, 38.0, 40.0),
       # Low resolution
@@ -92,7 +92,7 @@ fp = {'model': 'cylinder_3d', 'fieldtype': 'Voltage_Activation', 'evaltype': 'SG
       #           1.4, 1.6, 1.8, 2.0, 2.4, 2.8, 3.2, 3.6, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0,
       #           8.5, 9.0, 9.5, 10.0, 15, 20.0, 25.0, 30.0, 35.0, 40),
       # Very low resolution for debugging
-      # 'zEval': (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0),
+      #'zEval': (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0),
       'mMax': 47, 'intStart': 1e-12, 'intEnd': 500.0, 'reval': 1.3,
       'ITOL': 1e-6, 'runDate': 'rundate', 'runOutFile': 'savefile', 'run_duration': 0.0}
 
