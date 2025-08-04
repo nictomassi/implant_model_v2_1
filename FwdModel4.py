@@ -28,7 +28,8 @@ def fwd_model_4(mode):
                     # Do the parsing
                     tempdata[i] = row[0]
         NEURONS['act_stdrel'] = tempdata[1]
-        NEURONS['thrtarg'] = tempdata[2]
+        NEURONS['act_ctr'] = tempdata[2]
+        NEURONS['thrtarg']=100
         espace = tempdata[3]  # should be overridden by scenario/subject
     elif mode == 'gui':
         # read CSV file with position, survival espace
@@ -93,6 +94,7 @@ def fwd_model_4(mode):
 
         else:
             [surv_vals, electrodes['rpos'], espace] = s_scen.set_scenario(scenario, NELEC)
+
 
         elec_midpoint = GRID['z'][-1]/2.0  # electrode array midpoint
         array_base = -(np.arange(NELEC - 1, -1, -1) * espace)

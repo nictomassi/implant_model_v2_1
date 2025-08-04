@@ -25,12 +25,14 @@ import figs4_5_2D_contour
 import fig3_neuron_activation
 
 
+
 def fwd_model_2D(mode):
 
     # TODO:  should loop on espace values. Looping could then be removed from the param_survey script
     if mode == 'main':
-        # espace = 0.85
-        espace = 1.1
+        espace = 0.85
+       # espace = 1.1
+        #espace=2.2
 
         pass  # proceed as normal
     elif mode == 'survey':
@@ -47,7 +49,8 @@ def fwd_model_2D(mode):
 
         #  res_ext = tempdata[0]  # this variable is not used in this context.
         NEURONS['act_stdrel'] = tempdata[1]
-        NEURONS['thrtarg'] = tempdata[2]
+        NEURONS['thrtarg'] = 100
+        NEURONS['act_ctr'] = tempdata[2]
         espace = tempdata[3]
     else:  # should not happen
         print('fwd_model called with unrecognized mode: ', mode)
@@ -135,6 +138,7 @@ def fwd_model_2D(mode):
     thr_sim_db[:] = np.nan
     neuronact = np.empty((nSurv, nRpos, n_sig, 1, len(GRID['z'])))  # Only 1 electrode in this model
     neuronact[:] = np.nan
+    neuroncount=[]
 
     # Get survival values for all neuron clusters from the 16 values at electrode positions.
     simParams['neurons']['rlvl'] = rlvltable
@@ -161,7 +165,7 @@ def fwd_model_2D(mode):
                 if np.max(nexttemp2) == 0:
                     print("flat activation")
                 neuronact[j, k, i, :, :] = nexttemp2
-                # neuroncount = np.sum(neuronact[j, k, i, :, :])  ## commented out because unused 24 May 2024
+                neuroncount = np.sum(neuronact[j, k, i, :, :])  ## commented out because unused 24 May 2024
 
     # Write results to a CSV file
     header1 = ['Monopolar thresholds', 'rpos values in columns']

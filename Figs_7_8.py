@@ -22,7 +22,7 @@ def plot_inverse_results(use_fwd_model, txt_string, unsupervised):
     else:
         subject = txt_string[0]
         ct_vals = subject_data.subj_ct_data(subject)
-        data_filename = INVOUTPUTDIR + subject + '_fitResults_' + 'combined.npy'
+        data_filename = INVOUTPUTDIR + subject + '_fitResults_' + 'survival.npy'
         [_, rposvals, survvals, thrsim, thrtargs, _, [fitrposvals, fitsurvvals],
          _, rpos_err_metric, _, ct_vals] = np.load(data_filename, allow_pickle=True)
 
@@ -143,6 +143,6 @@ def plot_inverse_results(use_fwd_model, txt_string, unsupervised):
 if __name__ == '__main__':
     use_fwd_model = False
     # txt_string = ['S40', 'S42']  # 2 subjects to fit side by side Fig 7 of the paper
-    txt_string = ['S42', 'S29']  # 2 subjects to fit side by side Fig 8 of the paper
+    txt_string = ['S40']#['S42', 'S29']  # 2 subjects to fit side by side Fig 8 of the paper
     unsupervised = False
     plot_inverse_results(use_fwd_model, txt_string, unsupervised)

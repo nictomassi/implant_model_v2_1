@@ -56,6 +56,9 @@ def set_scenario(this_scen, n_elec):
         elif this_scen == 'Uniform40R00':
             surv_vals = 0.4 * np.ones(n_elec)
             rpos_vals = np.zeros(n_elec)
+        elif this_scen == 'Uniform20R01':
+            surv_vals = 0.2 * np.ones(n_elec)
+            rpos_vals = np.zeros(n_elec)+1
         elif this_scen == 'Step40_80R00':
             surv_vals = 0.4 * np.ones(n_elec)
             surv_vals[7:] = 0.8

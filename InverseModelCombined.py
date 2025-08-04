@@ -34,17 +34,19 @@ import plot_inverse_results
 from common_params import *  # import common values across all models
 
 # User adjustable parameters
-fit_mode = 'survival'  # Which variable(s) to fit? Alternatives are 'combined', 'rpos' or 'survival'
+fit_mode = 'combined'  # Which variable(s) to fit? Alternatives are 'combined', 'rpos' or 'survival'
 ifPlot = True  # Whether to plot output at end
 unsupervised = True  # Makes & saves summary plots but does not display them and wait for user input before proceeding
 ifPlotGuessContours = False  # Option to plot initial guesses for parameters given to the fitting algorithm
 fit_tol = 0.1  # Fit tolerance for subject fits
 use_minimizer = True  # If true, uses the lmfit wrapper around scipy optimize. Otherwise, vanilla scipy.minimize
 if_save_npy = True
-
+m_test = 'False'
 
 # For optimizing fit to thresholds need e_field, sim_params, sigvals
 # This is for all electrodes at once
+
+
 def objectivefunc_lmfit_all(par, sigvals, sim_params, f_par, e_field, thr_goals):
     # Repack parameters into arrays
     nel = len(sim_params['electrodes']['zpos'])
@@ -86,8 +88,10 @@ def objectivefunc_lmfit_all(par, sigvals, sim_params, f_par, e_field, thr_goals)
             tempsurv[0] = tempsurv[1]
             tempsurv[-1] = tempsurv[-2]
 
+    #sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
+                                                             #tempsurv2, simParams['grid']['z'])
     sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
-                                                             tempsurv2, simParams['grid']['z'])
+                                                            tempsurv2, simParams['grid']['z'])
 
     # Call for monopolar then tripolar
     sim_params['channel']['sigma'] = sigvals[0]
@@ -208,7 +212,9 @@ def inverse_model_combined(mode):  # Start this script
 
         res_ext = tempdata[0]
         NEURONS['act_stdrel'] = tempdata[1]
-        NEURONS['thrtarg'] = tempdata[2]
+        #NEURONS['thrtarg'] = tempdata[2]
+        NEURONS['act_ctr'] = tempdata[2]
+        NEURONS['thrtarg']=100
         espace = tempdata[3]
     else:  # should not happen
         print('fwd_model called with unrecognized mode: ', mode)
@@ -703,7 +709,7 @@ def inverse_model_combined(mode):  # Start this script
                 [dist_corr[scen], dist_corr_p[scen]] = stats.pearsonr(1 - rposvals, 1 - fitrposvals)
 
             # Save values in CSV format
-            save_file_name = INVOUTPUTDIR + scenario + '_fitResults_' + 'combined.csv'
+            save_file_name = INVOUTPUTDIR + scenario + '_fitResults_' + fit_mode+'.csv'
         else:  # for subjects
             ct_vals = subject_data.subj_ct_data(subject)
             survivalerrs = np.empty(NELEC)
@@ -730,18 +736,18 @@ def inverse_model_combined(mode):  # Start this script
                 rpos_err_summary[scen] = np.NAN
 
             # Save values in CSV format
-            save_file_name = INVOUTPUTDIR + subject + '_fitResults_' + 'combined.csv'
+            save_file_name = INVOUTPUTDIR + subject + '_fitResults_' + fit_mode + '.csv'
 
         # Save the data for this scenario
         with open(save_file_name, mode='w') as data_file:
             data_writer = csv.writer(data_file, delimiter=',', quotechar='"')
             if use_fwd_model:
                 header = ['Electrode', 'ThreshMP', 'ThreshTP', 'Fitted ThreshMP', 'Fitted ThreshTP',
-                          'Rposition', 'RpositionFit', 'Survival', 'Fitted Survival', 'RposError', 'SurvError']
+                          'Rposition', 'RpositionFit', 'Survival', 'Fitted Survival', 'RposError', 'SurvError','offset (NAN)']
             else:
                 header = ['Electrode', 'ThreshMP', 'ThreshTP', 'Fitted ThreshMP', 'Fitted ThreshTP',
                           'CT_position', 'RpositionFit', 'Survival (Nan)', 'Fitted survival', 'RposError',
-                          'SurvError (Nan)']
+                          'SurvError (Nan)', 'offset']
 
             data_writer.writerow(header)
             for row in range(NELEC):
@@ -770,12 +776,15 @@ def inverse_model_combined(mode):  # Start this script
                 if use_fwd_model:
                     if row == 0 or row == NELEC - 1:
                         t11 = np.nan
+                        t12 = np.nan
                     else:
                         t11 = survivalerrs[row - 1]
+
                 else:
                     t11 = np.NaN
+                    t12 = overall_offset_db
 
-                data_writer.writerow([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11])
+                data_writer.writerow([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12])
 
             # Done with the values for each electrode
             thr_err_mp = np.abs(np.subtract(thrsim[0][0][:], thrtargs[0][0][:]))
@@ -789,7 +798,7 @@ def inverse_model_combined(mode):  # Start this script
         data_file.close()
 
         # Save values in npy format
-        save_file_name = INVOUTPUTDIR + scenario + '_fitResults_combined.npy'
+        save_file_name = INVOUTPUTDIR + scenario + '_fitResults_' + fit_mode + '.npy'
         if use_fwd_model:
             np.save(save_file_name,
                     np.array([sigmaVals, rposvals, survvals, thrsim, thrtargs, initvec, [fitrposvals, fitsurvvals],
@@ -808,7 +817,7 @@ def inverse_model_combined(mode):  # Start this script
             else:
                 txt_string = subject
 
-            plot_inverse_results.plot_inverse_results(use_fwd_model, txt_string, unsupervised)
+            plot_inverse_results.plot_inverse_results(use_fwd_model, txt_string, unsupervised,fit_mode)
         if not if_save_npy:
             os.remove(save_file_name)
             os.remove(INVOUTPUTDIR + scenario + '_simParams_inv.npy')

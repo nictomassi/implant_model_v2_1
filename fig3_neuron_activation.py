@@ -16,6 +16,8 @@ def fig3_neuron_activation():
         e_txt = '085'
     elif espace == 1.1:
         e_txt = '110'
+    elif espace ==2.2:
+        e_txt='220'
     else:
         e_txt = 'xxx'
     es_text = '_espace_' + e_txt
@@ -35,10 +37,17 @@ def fig3_neuron_activation():
 
     # can be useful for some debugging or draft figures
     hires = '_hi_res'
-    descrip = "surv_" + str(np.min(surv_vals)) + "_" + str(np.max(surv_vals)) + "_rpos_" + \
-              str(np.min(rpos_vals)) + "_" + str(np.max(rpos_vals)) + hires
+   # descrip = "surv_" + str(np.min(surv_vals)) + "_" + str(np.max(surv_vals)) + "_rpos_" + \
+    #          str(np.min(rpos_vals)) + "_" + str(np.max(rpos_vals)) + hires
+#
+#
+ #
+    descrip = (
+        f"surv_{np.min(surv_vals):.2f}_{np.max(surv_vals):.2f}_rpos_"
+        f"{np.min(rpos_vals):.2f}_{np.max(rpos_vals):.2f}{hires}"
+    )
 
-
+    params_file = f"{FWDOUTPUTDIR}/simParams{descrip}{es_text}.pickle"
     params_file = FWDOUTPUTDIR + '/simParams' + descrip + es_text + '.pickle'
     # sp = np.load(params_file + '.npy', allow_pickle=True)
     with open(params_file, 'rb') as f:
@@ -118,18 +127,23 @@ def fig3_neuron_activation():
         # place threshold values here
         xlimit = [-4, 4]
         ax.set_xlim((xlimit[0], xlimit[1]))
-        ax.set_ylim((0.0, 0.08))
-        ax.set_yticks([0, 0.04, 0.08])
+       # ax.set_ylim((0.0, 0.08))
+        #ax.set_yticks([0, 0.04, 0.08])
         ax.spines.right.set_visible(False)
         ax.spines.top.set_visible(False)
         ax.label_outer()
         if col == (nsurv - 1):
             mytext = 'Distance = ' + str(1 - plt_rpos_vals[row]) + ' mm'
-            ax.text(4.0, 0.075, mytext, horizontalalignment='right')
+            #ax.text(4.0, 0.075, mytext, horizontalalignment='right')
+            #m_thr_text = "Monopolar thr.: %.2f dB" % mono_thr[survidxs[col], rposidxs[row]]
+            #t_thr_text = "Tripoloar thr.: %.2f dB" % tripol_thr[survidxs[col], rposidxs[row]]
+            #ax.text(4.0, 0.068, m_thr_text, horizontalalignment='right')
+            #ax.text(4.0, 0.061, t_thr_text, horizontalalignment = 'right')
+            ax.text(4.0, 0.4, mytext, horizontalalignment='right')
             m_thr_text = "Monopolar thr.: %.2f dB" % mono_thr[survidxs[col], rposidxs[row]]
             t_thr_text = "Tripoloar thr.: %.2f dB" % tripol_thr[survidxs[col], rposidxs[row]]
-            ax.text(4.0, 0.068, m_thr_text, horizontalalignment='right')
-            ax.text(4.0, 0.061, t_thr_text, horizontalalignment = 'right')
+            ax.text(4.0, 0.3, m_thr_text, horizontalalignment='right')
+            ax.text(4.0, 0.2, t_thr_text, horizontalalignment='right')
 
             print('surv ', titletext, ' dist ', str(1 - plt_rpos_vals[row]), ' Thr: ', mono_thr[survidxs[col],
                         rposidxs[row]], ' and ', tripol_thr[survidxs[col], rposidxs[row]])

@@ -17,8 +17,10 @@ res_ext = 250.0  # DOUBLE CHECK this in COMMON PARAMS. should double-check that 
 # start by cycling through stdrel, # of active neurons
 # stdrel_vals = [0.125, 0.2, 0.5, 1, 2, 4, 8, 16, 32]
 # thrtarg_vals = [1, 2, 5, 10, 25, 50, 100, 200, 500, 1000]
-stdrel_vals = [0.5, 1, 2, 4, 8]
+#stdrel_vals = [0.5, 1, 2, 4, 8]
+stdrel_vals = [0.3, 0.5, 0.7, 0.9, 1.1, 1.3,1.5,1.7]
 thrtarg_vals = [25, 50, 100, 500, 1000]
+actr_vals=[25,50,75,100,125,150,175,200]
 
 # stdrel_vals = [2]
 # thrtarg_vals = [100]
@@ -27,22 +29,45 @@ thrtarg_vals = [25, 50, 100, 500, 1000]
 # Set up variables to store output
 n_std = len(stdrel_vals)
 n_thr = len(thrtarg_vals)
-mp_err_summ = np.zeros((n_std, n_thr))
-tp_err_summ = np.zeros((n_std, n_thr))
-dist_err_summ = np.zeros((n_std, n_thr))
-dist_corr_sum = np.zeros((n_std, n_thr))
-n_corr_sig = np.zeros((n_std, n_thr))
+n_actr=len(actr_vals)
+#mp_err_summ = np.zeros((n_std, n_thr))
+#tp_err_summ = np.zeros((n_std, n_thr))
+
+mp_err_summ = np.zeros((n_std, n_actr))
+tp_err_summ = np.zeros((n_std, n_actr))
+
+#dist_err_summ = np.zeros((n_std, n_thr))
+#dist_corr_sum = np.zeros((n_std, n_thr))
+
+dist_err_summ = np.zeros((n_std, n_actr))
+dist_corr_sum = np.zeros((n_std, n_actr))
+
+#dist_err_summ = np.zeros((n_std, n_thr))
+#dist_corr_sum = np.zeros((n_std, n_thr))
+
+diff_err_surv = np.zeros((n_std, n_actr))
+dist_corr_surv = np.zeros((n_std, n_actr))
+
+#n_corr_sig = np.zeros((n_std, n_thr))
+n_corr_sig = np.zeros((n_std, n_actr))
 
 
 for stdrel in stdrel_vals:  # loop on stdrel values
     espace = 1.1  # set espace to get 2D fwd model
-    for thrtarg in thrtarg_vals:  # loop on target #
+    #for thrtarg in thrtarg_vals:  # loop on target #
+    for act in actr_vals:
+        new_dir_suffix = 'new_R%d' % res_ext + '_' + 'std_%.1f' % stdrel + '_act_%d' % act #'_thr_%d' % thrtarg
+
+        FWD_OUT_PRFIX = 'FWD_OUTPUT/'
+        FWDOUTPUTDIR = FWD_OUT_PRFIX + new_dir_suffix
+        INV_OUT_PRFIX = 'INV_OUTPUT/'
+        INVOUTPUTDIR = INV_OUT_PRFIX + new_dir_suffix
         # save file with key params
         param_file = 'surv_params.txt'  # param file to pass to the other model scripts
         tempdata = np.zeros(4)  # 4 values
         tempdata[0] = res_ext
         tempdata[1] = stdrel
-        tempdata[2] = thrtarg
+        tempdata[2] = act#thrtarg
         tempdata[3] = espace
         with open(param_file, mode='w') as data_file:
             data_writer = csv.writer(data_file, delimiter=',')
@@ -59,7 +84,7 @@ for stdrel in stdrel_vals:  # loop on stdrel values
         tempdata = np.zeros(4)  # 4 values
         tempdata[0] = res_ext
         tempdata[1] = stdrel
-        tempdata[2] = thrtarg
+        tempdata[2] = act #thrtarg
         tempdata[3] = espace
         with open(param_file, mode='w') as data_file:
             data_writer = csv.writer(data_file, delimiter=',')
@@ -75,7 +100,7 @@ for stdrel in stdrel_vals:  # loop on stdrel values
         tempdata = np.zeros(4)  # 3 values
         tempdata[0] = res_ext
         tempdata[1] = stdrel
-        tempdata[2] = thrtarg
+        tempdata[2] = act #thrtarg
         tempdata[3] = espace
         with open(param_file, mode='w') as data_file:
             data_writer = csv.writer(data_file, delimiter=',')
@@ -91,7 +116,7 @@ for stdrel in stdrel_vals:  # loop on stdrel values
         tempdata = np.zeros(4)  # 3 values
         tempdata[0] = res_ext
         tempdata[1] = stdrel
-        tempdata[2] = thrtarg
+        tempdata[2] = act #thrtarg
         tempdata[3] = espace
         with open(param_file, mode='w') as data_file:
             data_writer = csv.writer(data_file, delimiter=',')
@@ -121,17 +146,17 @@ for stdrel in stdrel_vals:  # loop on stdrel values
 ###
 
         # Rename fwd and inverse output directories
-        new_dir_suffix = 'R%d' % res_ext + '_' + 'std_%.1f' % stdrel + '_thr_%d' % thrtarg
+        new_dir_suffix = 'surivival_new_R%d' % res_ext + '_' + 'std_%.1f' % stdrel + '_act_%d' % act #'_thr_%d' % thrtarg
         # offset = len(cp.FWD_OUT_PRFIX)
         FWD_OUT_PRFIX = 'FWD_OUTPUT/'
         FWDOUTPUTDIR = FWD_OUT_PRFIX + new_dir_suffix
         INV_OUT_PRFIX = 'INV_OUTPUT/'
         INVOUTPUTDIR = INV_OUT_PRFIX + new_dir_suffix
 
-        #new_fwd_dir = FWDOUTPUTDIR + new_dir_suffix
+        new_fwd_dir = FWDOUTPUTDIR + new_dir_suffix
         os.rename(cp.FWDOUTPUTDIR, FWDOUTPUTDIR)
         # offset = len(cp.INV_OUT_PRFIX)
-        #new_inv_dir = INVOUTPUTDIR + new_dir_suffix
+        new_inv_dir = INVOUTPUTDIR + new_dir_suffix
         os.rename(cp.INVOUTPUTDIR, INVOUTPUTDIR)
 
 ## clean up by removing param_file

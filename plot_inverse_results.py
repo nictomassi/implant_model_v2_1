@@ -7,7 +7,7 @@ from common_params import *  # import common values across all models
 import subject_data
 
 
-def plot_inverse_results(use_fwd_model, this_case, unsupervised):
+def plot_inverse_results(use_fwd_model, this_case, unsupervised,fit_mode):
     # Key constants to set
     save_fig = True
     plot_guess = False
@@ -16,12 +16,12 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised):
 
     # Open file and load data
     if use_fwd_model:
-        data_filename = INVOUTPUTDIR + this_case + '_fitResults_' + 'combined.npy'
+        data_filename = INVOUTPUTDIR + this_case + '_fitResults_' + fit_mode+'.npy'
         [_, rposvals, survvals, thrsim, thrtargs, initvec, [fitrposvals, fitsurvvals],
          _, rpos_err_metric, survivalerrs] = np.load(data_filename, allow_pickle=True)
     else:
         ct_vals = subject_data.subj_ct_data(this_case)
-        data_filename = INVOUTPUTDIR + this_case + '_fitResults_' + 'combined.npy'
+        data_filename = INVOUTPUTDIR + this_case + '_fitResults_' + fit_mode+'.npy'
         [_, rposvals, survvals, thrsim, thrtargs, initvec, [fitrposvals, fitsurvvals],
          _, rpos_err_metric, _, ct_vals] = np.load(data_filename, allow_pickle=True)
 
@@ -98,7 +98,7 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised):
     # -- could add plots of error (difference between desired/measured and fitted values)
 
     if save_fig:
-        save_file_name = INVOUTPUTDIR + this_case + '_fitResultsFig_' + 'combined.png'
+        save_file_name = INVOUTPUTDIR + this_case + '_fitResultsFig_' + fit_mode+'.png'
         fig_consol.savefig(save_file_name)
 
     # test correlation figure

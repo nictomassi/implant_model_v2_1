@@ -11,9 +11,9 @@ R_EXT = 250.0   # ohm-cm
 RE_TEXT = 'RE' + str(round(R_EXT))
 R_INT = 70.0  # ohm-cm
 RI_TEXT = 'RI' + str(round(R_INT))
-THRTARG = 100.0
+THRTARG = 100#100.0
 TARG_TEXT = '_TARG' + str(round(THRTARG)) + '/'
-ACTR = 100.0
+ACTR = 100
 ACTR_TEXT = '_ACTR' + str(round(ACTR)) + '_'
 ACT_STDREL = 2.0
 STD_TEXT = 'STDR' + str(ACT_STDREL)
@@ -25,7 +25,7 @@ sigmaVals = [0, 0.9]  # Always explore monopolar stimulation and one value of si
 
 COCHLEA = {'source': 'manual', 'timestamp': [], 'radius': []}
 electrodes = {'source': 'manual', 'timestamp': [], 'zpos': [], 'rpos': []}
-NEURONS = {'act_ctr': ACTR, 'act_stdrel': ACT_STDREL, 'nsurvival': [], 'sidelobe': 1.0, 'neur_per_clust': 10,
+NEURONS = {'act_ctr': ACTR, 'act_stdrel': ACT_STDREL, 'nsurvival': [], 'sidelobe': 1, 'neur_per_clust': 10,
            'rlvl': [], 'rule': 'proportional', 'coef': 0.0, 'power': 1.0, 'thrtarg': THRTARG}
 # For COEF convex: <0 | 0.4, 0.9  linear: 0 | 1; concave: >0 | 1.0, 1.8
 CHANNEL = {'source': 'manual', 'number': range(0, NELEC), 'config': 'pTP', 'sigma': 0.9, 'alpha': 0.5,
@@ -52,8 +52,9 @@ tp_extend = False  # Whether to fit position and density at end electrodes
 
 # Not used by the 2D exploration tool. These are left in for convenience
 global scenarios
-# scenarios = ['Gradual80R75']
-# scenarios = ['Uniform80R05']
+#scenarios = ['Gradual80R75']
+#scenarios = ['Uniform80R05']
+#scenarios=['Uniform20R01']
 # scenarios = ['Uniform100R05', 'Uniform100R10', 'Uniform100R15']
 # scenarios = ['Uniform80R05', 'Uniform80R10', 'Uniform80R15']  # Used for Fig 3
 # scenarios = ['Ramp80Rvariable1']
@@ -81,10 +82,10 @@ global scenarios
 
 
 # Actual subject data. For inverse model only
-# scenarios = ['S22']  # paper "good fit" examples. Figure 7
+#scenarios = ['S52']  # paper "good fit" examples. Figure 7
 # scenarios = ['S29', 'S56']  # paper "poor fit" examples. Figure 8
 # scenarios = ['A002R', 'A005L', 'A014L', 'A022L', 'A022R', 'A023R', 'A024L']
-scenarios = ['S42']
+scenarios = ['A024L']
 # all subjects with CT data
 # scenarios = ['RampRposSGradual80', 'S22']
 # scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S42', 'S43']
@@ -127,4 +128,5 @@ elif RE_TEXT == 'RE125O':
 elif RE_TEXT == 'RE2500':
     FIELDTABLE = '7Dec2023_MedResolution_Rext2500_nonans.dat'
 
+FIELDTABLE = 'Sample_Voltage.dat'
 FIELDTABLE = vtable_dir + FIELDTABLE

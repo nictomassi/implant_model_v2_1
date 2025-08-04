@@ -39,7 +39,7 @@ def fig_2D_contour():
 
     # Load monopolar data
     # Rename fwd and inverse output directories
-    new_dir_suffix = 'RE%d' % R_EXT + '_'+'RI%d' % R_INT +'std_%.1f' % ACT_STDREL + '_thr_%d' % THRTARG
+    new_dir_suffix = 'new_RE%d' % R_EXT + '_'+'RI%d' % R_INT +'std_%.1f' % ACT_STDREL + '_act_%d' % ACTR#'_thr_%d' % THRTARG
     # offset = len(cp.FWD_OUT_PRFIX)
     FWD_OUT_PRFIX = 'FWD_OUTPUT/'
     FWDOUTPUTDIR = FWD_OUT_PRFIX + new_dir_suffix
