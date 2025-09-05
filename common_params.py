@@ -7,7 +7,7 @@ NELEC = 16
 # ELEC_BASALPOS = 26.25  # in mm ** removed this 20 May 2024 to make sure electrode array is centered in neurons
 
 # Neural activation parameters
-R_EXT = 250.0   # ohm-cm
+R_EXT = 250 #250.0   # ohm-cm
 RE_TEXT = 'RE' + str(round(R_EXT))
 R_INT = 70.0  # ohm-cm
 RI_TEXT = 'RI' + str(round(R_INT))
@@ -15,7 +15,7 @@ THRTARG = 100#100.0
 TARG_TEXT = '_TARG' + str(round(THRTARG)) + '/'
 ACTR = 100
 ACTR_TEXT = '_ACTR' + str(round(ACTR)) + '_'
-ACT_STDREL = 2.0
+ACT_STDREL = 0.6#0.01#0.7
 STD_TEXT = 'STDR' + str(ACT_STDREL)
 STD_TEXT = STD_TEXT.replace('.', '_')
 
@@ -70,6 +70,7 @@ global scenarios
 
 # scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80']  # for paper figure 6
 # scenarios = ['Gradual2_80R00']
+#scenarios=['Gradual80R-75']
 # scenarios = ['RampRposRampSurv']
 # scenarios = ['ExtremeHole']
 # scenarios = ['RampRposS80']
@@ -82,10 +83,10 @@ global scenarios
 
 
 # Actual subject data. For inverse model only
-#scenarios = ['S52']  # paper "good fit" examples. Figure 7
+scenarios = ['S22']  # paper "good fit" examples. Figure 7
 # scenarios = ['S29', 'S56']  # paper "poor fit" examples. Figure 8
 # scenarios = ['A002R', 'A005L', 'A014L', 'A022L', 'A022R', 'A023R', 'A024L']
-scenarios = ['A024L']
+#scenarios = ['S52']
 # all subjects with CT data
 # scenarios = ['RampRposSGradual80', 'S22']
 # scenarios = ['Gradual80R00', 'RampRposS80', 'RampRposSGradual80', 'S42', 'S43']

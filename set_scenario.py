@@ -24,6 +24,9 @@ def set_scenario(this_scen, n_elec):
         elif this_scen == 'Gradual80R75':
             surv_vals = [0.8, 0.8, 0.6, 0.4, 0.4, 0.6, 0.8, 0.8, 0.8, 0.6, 0.4, 0.4, 0.6, 0.8, 0.8, 0.8]
             rpos_vals = np.zeros(n_elec) + 0.75
+        elif this_scen == 'Gradual80R-75':
+            surv_vals = [0.8, 0.8, 0.6, 0.4, 0.4, 0.6, 0.8, 0.8, 0.8, 0.6, 0.4, 0.4, 0.6, 0.8, 0.8, 0.8]
+            rpos_vals = np.zeros(n_elec) - 0.75
         elif this_scen == 'Gradual80R-50_e11':
             surv_vals = [0.8, 0.8, 0.6, 0.4, 0.4, 0.6, 0.8, 0.8, 0.8, 0.6, 0.4, 0.4, 0.6, 0.8, 0.8, 0.8]
             rpos_vals = np.zeros(n_elec) - 0.5

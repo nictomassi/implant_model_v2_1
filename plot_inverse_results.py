@@ -35,15 +35,24 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised,fit_mode):
     fig_consol, axs = plt.subplots(figrows, figcols)
     fig_consol.set_figheight(9)
     fig_consol.set_figwidth(7.5)
-    axs[0].plot(xvals + 0.1, thrsim[0][0], marker='o', color='lightblue', label='fit MP')
-    axs[0].plot(xvals - 0.1, thrtargs[0][0], marker='o', color='blue', label='measured MP')
-    axs[0].plot(xvals[1:l_e] + 0.1, thrsim[1][0][1:l_e], marker='o', color='pink', label='fit TP')
-    axs[0].plot(xvals[1:l_e] - 0.1, thrtargs[1][0][1:l_e], marker='o', color='red', label='measured TP')
+
+    if not tp_extend:
+        axs[0].plot(xvals[1:l_e] + 0.1, thrsim[0][0][1:l_e], marker='o', color='lightblue', label='fit MP')
+        axs[0].plot(xvals[1:l_e] - 0.1, thrtargs[0][0][1:l_e], marker='o', color='blue', label='measured MP')
+        axs[0].plot(xvals[1:l_e] + 0.1, thrsim[1][0][1:l_e], marker='o', color='pink', label='fit TP')
+        axs[0].plot(xvals[1:l_e] - 0.1, thrtargs[1][0][1:l_e], marker='o', color='red', label='measured TP')
+        mean_thr_err = (np.nanmean(np.abs(np.array(thrsim[0]) - np.array(thrtargs[0]))) +
+                        np.nanmean(np.abs(np.array(thrsim[1]) - np.array(thrtargs[1])))) / 2.0
+    else:
+
+        axs[0].plot(xvals + 0.1, thrsim[0][0], marker='o', color='lightblue', label='fit MP')
+        axs[0].plot(xvals - 0.1, thrtargs[0][0], marker='o', color='blue', label='measured MP')
+        axs[0].plot(xvals[1:l_e] + 0.1, thrsim[1][0][1:l_e], marker='o', color='pink', label='fit TP')
+        axs[0].plot(xvals[1:l_e] - 0.1, thrtargs[1][0][1:l_e], marker='o', color='red', label='measured TP')
+        mean_thr_err = (np.nanmean(np.abs(np.array(thrsim[0]) - np.array(thrtargs[0]))) +
+                        np.nanmean(np.abs(np.array(thrsim[1]) - np.array(thrtargs[1])))) / 2.0
+
     yl = 'Threshold (dB)'
-    mean_thr_err = (np.nanmean(np.abs(np.array(thrsim[0]) - np.array(thrtargs[0]))) +
-                    np.nanmean(np.abs(np.array(thrsim[1]) - np.array(thrtargs[1])))) / 2.0
-
-
     if use_fwd_model:
         title_text = 'Known scenario thresholds: ' + this_case + '; mean thr error (dB): ' + '%.2f' % mean_thr_err
     else:
@@ -59,17 +68,36 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised,fit_mode):
         if np.any(ct_vals):
             [dist_corr, dist_corr_p] = stats.pearsonr(1 - ct_vals, 1 - fitrposvals)
     title_text = 'Fit and actual positions; mean position error (mm): ' + '%.2f' % rpos_err_metric
-    # axs[1].plot(xvals[1:l_e] + 0.1, 1 - fitrposvals[1:l_e], marker='o', color='gray', label='fit')
-    axs[1].plot(xvals + 0.1, 1 - fitrposvals, marker='o', color='gray', label='fit')
+    if not tp_extend:
 
-    if use_fwd_model:
-        axs[1].plot(xvals - 0.1, 1 - rposvals, marker='o', color='black', label='actual')
+        axs[1].plot(xvals[1:l_e] + 0.1, 1 - fitrposvals[1:l_e], marker='o', color='gray', label='fit')
+        if use_fwd_model:
+            axs[1].plot(xvals[1:l_e] - 0.1, 1 - rposvals[1:l_e], marker='o', color='black', label='actual')
+        else:
+            if np.any(ct_vals):
+                axs[1].plot(xvals[1:l_e] - 0.1, 1 - ct_vals[1:l_e], marker='o', color='black', label='CT estimate')
+                if plot_ct_uncertainty:
+                    axs[1].fill_between(xvals[1:l_e] - 0.1, (1 - ct_vals[1:l_e]) - ct_uncertainty, (1 - ct_vals[1:l_e]) + ct_uncertainty,
+                                        color='black', alpha=0.1)
     else:
-        if np.any(ct_vals):
-            axs[1].plot(xvals - 0.1, 1 - ct_vals, marker='o', color='black', label='CT estimate')
-            if plot_ct_uncertainty:
-                axs[1].fill_between(xvals - 0.1, (1 - ct_vals) - ct_uncertainty, (1 - ct_vals) + ct_uncertainty,
-                                    color='black', alpha=0.1)
+        axs[1].plot(xvals + 0.1, 1 - fitrposvals, marker='o', color='gray', label='fit')
+        if use_fwd_model:
+            axs[1].plot(xvals - 0.1, 1 - rposvals, marker='o', color='black', label='actual')
+        else:
+            if np.any(ct_vals):
+                axs[1].plot(xvals - 0.1, 1 - ct_vals, marker='o', color='black', label='CT estimate')
+                if plot_ct_uncertainty:
+                    axs[1].fill_between(xvals - 0.1, (1 - ct_vals) - ct_uncertainty, (1 - ct_vals) + ct_uncertainty,
+                                        color='black', alpha=0.1)
+
+   # if use_fwd_model:
+    #    axs[1].plot(xvals - 0.1, 1 - rposvals, marker='o', color='black', label='actual')
+   # else:
+    #    if np.any(ct_vals):
+     #       axs[1].plot(xvals - 0.1, 1 - ct_vals, marker='o', color='black', label='CT estimate')
+      #      if plot_ct_uncertainty:
+       #         axs[1].fill_between(xvals - 0.1, (1 - ct_vals) - ct_uncertainty, (1 - ct_vals) + ct_uncertainty,
+        #                            color='black', alpha=0.1)
 
     if plot_guess:
         axs[1].plot(xvals, 1 - initvec[0:NELEC], marker='o', color='purple', label='initial guess')
@@ -80,14 +108,25 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised,fit_mode):
     axs[1].legend()
 
     title_text = 'Fit survival values'
-    if use_fwd_model:
-        axs[2].plot(xvals, fitsurvvals, marker='o', color='red', label='fit')
-        axs[2].plot(xvals, survvals, marker='o', color='green', label='desired')
-        if plot_guess:
-            axs[2].plot(xvals, initvec[NELEC:], marker='o', color='purple', label='initial guess')
+    if not tp_extend:
+        if use_fwd_model:
+            axs[2].plot(xvals[1:l_e], fitsurvvals[1:l_e], marker='o', color='red', label='fit')
+            axs[2].plot(xvals[1:l_e], survvals[1:l_e], marker='o', color='green', label='desired')
+            if plot_guess:
+                axs[2].plot(xvals[1:l_e], initvec[NELEC-2:], marker='o', color='purple', label='initial guess')
 
+        else:
+            axs[2].plot(xvals[1:l_e], fitsurvvals[1:l_e], marker='o', color='black', label='modeled')
     else:
-        axs[2].plot(xvals, fitsurvvals, marker='o', color='black', label='modeled')
+
+        if use_fwd_model:
+            axs[2].plot(xvals, fitsurvvals, marker='o', color='red', label='fit')
+            axs[2].plot(xvals, survvals, marker='o', color='green', label='desired')
+            if plot_guess:
+                axs[2].plot(xvals, initvec[NELEC:], marker='o', color='purple', label='initial guess')
+
+        else:
+            axs[2].plot(xvals, fitsurvvals, marker='o', color='black', label='modeled')
 
     axs[2].set(xlabel='Electrode number', ylabel='Fractional neuronal density', title=title_text)
     axs[2].set_xlim(0, 17)
@@ -146,10 +185,11 @@ def plot_inverse_results(use_fwd_model, this_case, unsupervised,fit_mode):
 if __name__ == '__main__':
     use_fwd_model = False
     # case = scenarios[0]
-    case = 'S43'
+    case = 'S52'
     espace = 0.85
     # case = 'RampRposSGradual80'
     # case = 'Gradual80R00'
 
     unsupervised = False
-    plot_inverse_results(use_fwd_model, case, unsupervised)
+    fit_mode='survival'
+    plot_inverse_results(use_fwd_model, case, unsupervised,fit_mode)

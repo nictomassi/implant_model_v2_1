@@ -34,7 +34,7 @@ import plot_inverse_results
 from common_params import *  # import common values across all models
 
 # User adjustable parameters
-fit_mode = 'combined'  # Which variable(s) to fit? Alternatives are 'combined', 'rpos' or 'survival'
+fit_mode = 'survival'  # Which variable(s) to fit? Alternatives are 'combined', 'rpos' or 'survival'
 ifPlot = True  # Whether to plot output at end
 unsupervised = True  # Makes & saves summary plots but does not display them and wait for user input before proceeding
 ifPlotGuessContours = False  # Option to plot initial guesses for parameters given to the fitting algorithm
@@ -72,6 +72,8 @@ def objectivefunc_lmfit_all(par, sigvals, sim_params, f_par, e_field, thr_goals)
             tempsurv2[1:nel - 1] = tempsurv
             tempsurv2[0] = tempsurv2[1]
             tempsurv2[-1] = tempsurv2[-2]
+            sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
+                                                                     tempsurv2, simParams['grid']['z'])
 
     else:
         for i in range(0, nel):
@@ -87,11 +89,12 @@ def objectivefunc_lmfit_all(par, sigvals, sim_params, f_par, e_field, thr_goals)
 
             tempsurv[0] = tempsurv[1]
             tempsurv[-1] = tempsurv[-2]
+        sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
+                                                                 tempsurv, simParams['grid']['z'])
 
     #sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
                                                              #tempsurv2, simParams['grid']['z'])
-    sim_params['neurons']['nsurvival'] = surv_full.surv_full(sim_params['electrodes']['zpos'],
-                                                            tempsurv2, simParams['grid']['z'])
+
 
     # Call for monopolar then tripolar
     sim_params['channel']['sigma'] = sigvals[0]
@@ -249,6 +252,7 @@ def inverse_model_combined(mode):  # Start this script
 
     surv_grid_vals = np.arange(0.04, 0.97, 0.02)
     # TODO should read these from the file, not have the range hard coded here
+    ## TODO should we change these grid values to restrict the position a bit more??
     rpos_grid_vals = np.arange(-0.95, 0.96, 0.02)
 
     n_elec_pos = 0
@@ -523,8 +527,10 @@ def inverse_model_combined(mode):  # Start this script
                 initvec = np.append(fitrposvals[1:-1], fitsurvvals[1:-1])
                 for i, val in enumerate(initvec):  # place values in to the par object
                     if i < NELEC - 2:
-                        lb = -0.95  # lower and upper bounds for position
-                        ub = 0.95
+                        #lb = -0.95  # lower and upper bounds for position
+                        #ub = 0.95
+                        lb=-0.95
+                        ub=0.95
                     elif NELEC - 2 <= i < 2 * (NELEC - 2):
                         lb = 0.0  # density
                         ub = 1.0
@@ -541,8 +547,10 @@ def inverse_model_combined(mode):  # Start this script
 
                 for i, val in enumerate(initvec):  # place values in to the par object
                     if i < NELEC:
-                        lb = -0.95  # lower and upper bounds for position
-                        ub = 0.95
+                      #  lb = -0.95  # lower and upper bounds for position
+                     #   ub = 0.95
+                        lb=-0.95
+                        ub=0.95
                     elif NELEC <= i < 2 * NELEC:
                         lb = 0.0  # density
                         ub = 1.0
@@ -551,7 +559,7 @@ def inverse_model_combined(mode):  # Start this script
 
             # end block for single electrode fits during the combined fit
 
-        elif fit_mode == 'rpos':  # fit rpos only; hold survival fixed as the values loaded from the scenario
+        elif fit_mode == 'rpos':  #TODO may need fixing later on # fit rpos only; hold survival fixed as the values loaded from the scenario
             if use_minimizer == True:
                 initvec = np.append(fitrposvals[1:-1], fitsurvvals[1:-1])  ## this line needs attention
                 for i, val in enumerate(initvec):  # place values in to the par object
@@ -580,14 +588,23 @@ def inverse_model_combined(mode):  # Start this script
                         par.add('v_%i' % i, value=initvec[i], vary=False)
 
         elif fit_mode == 'survival':  ## TODO handle tp_extend if needed
-            rposvals = subject_data.subj_ct_data(subject)
+            if use_fwd_model:
+                rposvals= electrodes['rpos']
+                #survVals, electrodes['rpos']
+            else:
+                rposvals = subject_data.subj_ct_data(subject)
             if not tp_extend:
                 initvec = np.append(rposvals[1:-1], (np.ones(NELEC-2) * 0.5))
                 if use_minimizer == True:
                     for i, val in enumerate(initvec):  # place values in to the par object
                         if i < NELEC - 2:
-                            lb = initvec[i] - 0.01  # lower and upper bounds for position
-                            ub = initvec[i] + 0.01
+                            lb = initvec[i] - 0.2#0.01# # lower and upper bounds for position #max of lb coordinates max(),-1<--radius of cylinder
+                            ub = initvec[i] + 0.2
+                            if lb <= -1*radius+.05:
+                                lb = -1*radius+.05
+                          #  if ub < 0:
+                            #ub = .95
+
                         elif NELEC - 2 <= i < 2 * (NELEC - 2):
                             lb = 0.0  # density
                             ub = 1.0
@@ -597,8 +614,42 @@ def inverse_model_combined(mode):  # Start this script
                     # end block for single electrode fits during the combined fit
                     for i, val in enumerate(initvec):
                         if i < 16:
-                            lb = rposvals[i] - 0.01  # lower and upper bounds
-                            ub = rposvals[i] + 0.01
+                            lb = rposvals[i] - 0.2 #0.01 # lower and upper bounds
+                            ub = rposvals[i] + 0.2
+                            if lb <= -1*radius:
+                                lb = -1*radius+.05
+                            if ub <= -1 * radius+.95:
+                                ub = -1 * radius + .95
+                        else:
+                            lb = 0.1
+                            ub = 1.0
+                        par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
+            else:
+                initvec = np.append(rposvals, (np.ones(NELEC) * 0.5))
+                if use_minimizer == True:
+                    for i, val in enumerate(initvec):  # place values in to the par object
+                        if i < NELEC:
+                            lb = initvec[i] - 0.2 #CHANGE BACK 0.01# lower and upper bounds for position
+                            ub = initvec[i] + 0.2
+                            if lb <= -1*radius:
+                                lb = -1*radius+.05
+                            if ub <= -1 * radius+.95:
+                                ub = -1 * radius + .95
+                        else:
+                            lb = 0.0  # density
+                            ub = 1.0
+
+                        par.add('v_%i' % i, value=initvec[i], min=lb, max=ub)
+                else:
+                    # end block for single electrode fits during the combined fit
+                    for i, val in enumerate(initvec):
+                        if i < 16:
+                            lb = rposvals[i] - 0.2 #CHANGE BACK # lower and upper bounds
+                            ub = rposvals[i] + 0.2
+                            if lb <= -1*radius:
+                                lb = -1*radius+.05
+                            if ub <= -1 * radius+.95:
+                                ub = -1 * radius + .95
                         else:
                             lb = 0.1
                             ub = 1.0
@@ -621,10 +672,11 @@ def inverse_model_combined(mode):  # Start this script
                     vname = 'v_%i' % (i + NELEC - 2)
                     fitsurvvals[i + 1] = result.params[vname]
 
-                fitrposvals[0] = fitrposvals[1]
+                fitrposvals[0] = fitrposvals[1] #potentially check this
                 fitrposvals[-1] = fitrposvals[-2]
                 fitsurvvals[0] = fitsurvvals[1]
                 fitsurvvals[-1] = fitsurvvals[-2]
+
 
             else:
                 for i in range(NELEC):
